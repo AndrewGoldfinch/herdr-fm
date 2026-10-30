@@ -12,7 +12,7 @@
 | Collection latency at 25 and 50 tasks (P17) | bounds read (below) | pending |
 | Collector write set under `data/` and `state/` | cache dir only, by source | pending |
 | SSH and forge reads per collection | read (below) | pending |
-| Native APIs used by `main.js` | taken from shipped mods | `herdr-app check` pending |
+| Native APIs used by `main.js` | names and arity checked statically (below) | `herdr-app check` pending |
 | First-dock and uninstall behaviour | `mod.json` docking rule read | pending |
 | Fork contains `355a307` | not checked | pending |
 
@@ -70,6 +70,22 @@ grep -ohE '\$\{?FM_[A-Z_]*(OVERRIDE|_NOW[A-Z_]*|CACHE_DIR)\b' \
 - Remote secondmate homes (default 20): `fm-on.sh <id> fm-remote-file.sh get state/home-summary.json`, shared 5 s budget (`FM_SNAPSHOT_BUDGET`), cached copy on failure.
 - Away guard: `fm-afk-return.sh guard`; exit 3 with an `fm-afk-return:` message during an active away window, before any snapshot work.
 - Temp files go to `$TMPDIR`; the only write under the home is `state/secondmate-summary-cache/`.
+
+## Static API check (source)
+
+`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json`. `scripts/extract-gpui-surface.mjs` extracted that surface from herdr-app at the pinned revision; the sources it reads are identical at herdr-app `e3cdccc`. Result: no problems. Evidence per name:
+
+| Evidence | Names in `main.js` |
+| --- | --- |
+| Hand-bound param styles (`style.rs`) | `bg border_b border_color border_t gap h mb min_h min_w mx my pb px py rounded text_color text_size` |
+| Engine behaviours | `id on_click on_key_down overflow_y_scrollbar tooltip value` |
+| Engine prelude methods | `child children hover track_focus when` |
+| GPUI `Styled` fns | `flex_1 flex_none flex_wrap items_center truncate` |
+| Shipped mods only (exercised by herdr-app's render tests) | `border_1 cursor_pointer font_medium font_semibold h_full size_full`, and `InputState`/`Input` `new` and `on` |
+
+It proves names and argument presence, not argument types, which element a method applies to, or layout. `herdr-app check` is still required.
+
+`selectable` exists only on `TextView` (Markdown/HTML). Making artifact references selectable that way means escaping task text so it renders literally and no link becomes clickable; deferred.
 
 ## Native APIs to verify on the host
 
