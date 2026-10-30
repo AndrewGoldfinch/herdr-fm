@@ -214,12 +214,16 @@ type FleetRow = {
   owner: string | null;        // "(main)" or a secondmate id; null where the section has none
   title: string;               // summary / name / what / title, per section
   repo: string | null;
+  kind: string | null;         // Underway only
   state: string | null;        // raw Bearings word, unknown values kept verbatim
-  detail: string | null;       // verb, doing, reason or blocked_by, per section
+  detail: string | null;       // verb, doing or reason, per section
+  blockedBy: string | null;    // Charted Next only
   warning: boolean;            // synthetic gate ids such as "(main-inventory)"
   filed: string | null;
   endpoint: Endpoint | null;   // main-home tasks, from endpoints[]
-  artifacts: Array<{kind: "report" | "pr"; value: string}>;
+  paths: {worktree: string | null; home: string | null; status: string | null; report: string | null} | null;
+  artifacts: Array<{kind: "report" | "pr" | "artifact"; value: string}>; // "artifact": landed rows
+  ambiguous: boolean;          // another row in the section shares this key
 };
 type SecondmateSummary = {
   id: string;
@@ -235,7 +239,9 @@ type PanelModel = {
   homeLabel: string;
   homeCheck: "paths" | "label-only";
   generatedAt: string;
+  generatedMs: number;
   receivedAtMs: number;
+  prs: string | null;          // Bearings' PR-discovery note, for the header
   rows: Record<Section, FleetRow[]>;
   secondmates: SecondmateSummary[];
   disclosures: Disclosure[];   // producer omitted[], verbatim
