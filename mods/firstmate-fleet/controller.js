@@ -295,19 +295,20 @@ export function createController({ host, clock, parse = parseConfig, decode = de
     return `${formatAge(st.receiptAgeMs)}|${formatAge(st.producerAgeMs)}|${st.stale}|${st.uncertain}`;
   }
 
+  function tick() {
+    if (s.disposed) return NONE;
+    const trigger = due(now());
+    const pending = trigger ? attempt(trigger) : null;
+    const key = shownKey();
+    const changed = pending !== null || key !== s.shownKey;
+    s.shownKey = key;
+    return { changed, pending };
+  }
+
   return {
     configure,
-    start: () => tick(),
-
-    tick() {
-      if (s.disposed) return NONE;
-      const trigger = due(now());
-      const pending = trigger ? attempt(trigger) : null;
-      const key = shownKey();
-      const changed = pending !== null || key !== s.shownKey;
-      s.shownKey = key;
-      return { changed, pending };
-    },
+    start: tick,
+    tick,
 
     /** Manual refresh: bypasses backoff and minIntervalMs when idle; never queues. */
     refresh() {

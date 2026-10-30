@@ -1,0 +1,9 @@
+{
+  "schema": "firstmate-herdr-panel.config.v2",
+  "firstmateRoot": "/absolute/path/to/firstmate",
+  "firstmateHome": "/absolute/path/to/firstmate",
+  "minIntervalMs": 30000,
+  "fallbackMs": 120000,
+  "staleAfterMs": 360000,
+  "forgeReads": false
+}

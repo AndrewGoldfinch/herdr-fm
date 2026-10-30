@@ -72,3 +72,14 @@ test("unknown keys are rejected so a typo cannot silently fall back to a default
   assert.match(r.message, /forgeRead/);
   assert.equal(parseConfig(configText({ pageSize: 50 })).code, "unknown-key");
 });
+
+test("the shipped config.example.json is a valid config with the documented defaults", async () => {
+  const { readFileSync } = await import("node:fs");
+  const text = readFileSync(new URL("../mods/firstmate-fleet/config.example.json", import.meta.url), "utf8");
+  const r = parseConfig(text);
+  assert.equal(r.ok, true);
+  assert.deepEqual(
+    { minIntervalMs: r.config.minIntervalMs, fallbackMs: r.config.fallbackMs, staleAfterMs: r.config.staleAfterMs, forgeReads: r.config.forgeReads },
+    DEFAULTS,
+  );
+});

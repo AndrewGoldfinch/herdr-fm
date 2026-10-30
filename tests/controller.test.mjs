@@ -55,6 +55,16 @@ test("start reads config and launches one collection; success publishes the mode
   assert.equal(s.stale, false);
 });
 
+test("start() launches the initial collection", async () => {
+  const env = setup();
+  const a = env.c.start();
+  await flush();
+  assert.ok(a.pending);
+  assert.equal(env.host.calls.length, 1);
+  await env.settle(ok(), a);
+  assert.ok(env.c.getState().model);
+});
+
 test("P09: ten simultaneous refreshes create one subprocess", async () => {
   const env = setup();
   const a = await started(env);
