@@ -1,0 +1,40 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not requested (pass --include-prs for live GitHub discovery)",
+  "contributions": { "scope": "owned contributions per home", "known": 0, "checked": 0, "counts": { "captain": 0, "fleet": 0, "maintainer": 0, "nobody": 0 }, "complete": true, "proven_clear": true, "captain": [] },
+  "in_flight": [
+    { "id": "ask-api", "kind": "ship", "state": "parked", "repo": "acme/api", "name": "Migrate API client", "doing": "needs-decision: which API version should the client target?" }
+  ],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [
+    { "id": "pick-db", "key": "pick-db", "verb": "captain-hold", "summary": "Choose session store: Redis or Postgres?", "owner": "(main)" },
+    { "id": "mate-a/release-notes", "key": "release-notes", "verb": "captain-hold", "summary": "Release notes: publish now or wait for QA?", "owner": "mate-a" }
+  ],
+  "landed": [],
+  "gates": [
+    { "id": "(return-catchup)", "title": "2 blocker(s) to clear before ordinary work", "blocked_by": "-", "reason": "away-return catch-up", "owner": "(main)", "filed": null },
+    { "id": "(main-inventory)", "title": "orphan in-flight backlog rows", "blocked_by": "-", "reason": "main inventory", "owner": "(main)", "filed": null },
+    { "id": "schema-change", "title": "Approve schema change", "blocked_by": "ask-api", "reason": "blocked by ask-api: needs schema", "owner": "(main)", "filed": "2026-10-28" },
+    { "id": "vendor-contract", "title": "Sign vendor contract", "blocked_by": "-", "reason": "until 2026-11-15: waiting on vendor", "owner": "(main)", "filed": "2026-10-20" },
+    { "id": "pricing", "title": "Pricing call", "blocked_by": "-", "reason": "held 21d: pricing call", "owner": "(main)", "filed": "2026-10-09" }
+  ],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [
+    { "id": "ask-api", "worktree": "/home/captain/pool/api/1", "home": "-", "status": "/home/captain/firstmate/state/ask-api.status", "report": "/home/captain/firstmate/data/ask-api/report.md" }
+  ],
+  "endpoints": [
+    { "id": "ask-api", "backend": "hc", "target": "default:t3", "exists": true, "agent": "not_checked" }
+  ],
+  "omitted": [
+    { "surface": "backlog item bodies", "reveal": "--fields bodies" },
+    { "surface": "watch/steer actions", "reveal": "--fields actions" },
+    { "surface": "full scout-report inventory", "reveal": "--all-reports" },
+    { "surface": "captain holds bucketed blocked, dated, or aged: 3", "reveal": "--all-decisions" },
+    { "surface": "main in-flight backlog item(s) have no child metadata: 1", "reveal": "inspect main data/backlog.md In flight vs state/*.meta" },
+    { "surface": "live PR discovery + checks", "reveal": "--include-prs" }
+  ]
+}

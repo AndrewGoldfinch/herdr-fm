@@ -1,0 +1,38 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not requested (pass --include-prs for live GitHub discovery)",
+  "contributions": { "scope": "owned contributions per home", "known": 0, "checked": 0, "counts": { "captain": 0, "fleet": 0, "maintainer": 0, "nobody": 0 }, "complete": false, "proven_clear": false, "captain": [] },
+  "in_flight": [
+    { "id": "fix-login", "kind": "ship", "state": "working", "repo": "acme/webapp", "name": "Fix login redirect loop", "doing": "running tests" },
+    { "kind": "ship", "state": "working", "name": "row without an id" },
+    42
+  ],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [
+    { "id": 7, "what": "numeric id", "artifact": "-", "owner": "(main)" }
+  ],
+  "gates": [],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [
+    { "id": "fix-login", "worktree": "/home/captain/pool/webapp/1", "home": "-", "status": "/home/captain/firstmate/state/fix-login.status", "report": "/home/captain/firstmate/data/fix-login/report.md" }
+  ],
+  "endpoints": [],
+  "unhealthy_endpoints": [
+    { "id": "old-scout", "backend": "tmux", "target": "fm:old-scout", "exists": false, "agent": "not_checked" }
+  ],
+  "omitted": [
+    { "surface": "backlog item bodies", "reveal": "--fields bodies" },
+    { "surface": "watch/steer actions", "reveal": "--fields actions" },
+    { "surface": "full scout-report inventory", "reveal": "--all-reports" },
+    { "surface": "reports showing 20 of 30", "reveal": "--all-reports" },
+    { "surface": "decisions_open showing 20 of 25", "reveal": "--all-decisions" },
+    { "surface": "registered secondmates omitted by snapshot bound: 3", "reveal": "raise FM_SNAPSHOT_SECONDMATES" },
+    { "surface": "live PR discovery + checks", "reveal": "--include-prs" },
+    "not an object"
+  ]
+}

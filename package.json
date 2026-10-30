@@ -1,0 +1,12 @@
+{
+  "name": "firstmate-herdr-panel",
+  "private": true,
+  "description": "Herdr mod that renders FirstMate's Bearings model as a native fleet panel.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

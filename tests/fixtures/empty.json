@@ -1,0 +1,23 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not requested (pass --include-prs for live GitHub discovery)",
+  "contributions": { "scope": "owned contributions per home", "known": 0, "checked": 0, "counts": { "captain": 0, "fleet": 0, "maintainer": 0, "nobody": 0 }, "complete": true, "proven_clear": true, "captain": [] },
+  "in_flight": [],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [],
+  "gates": [],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [],
+  "endpoints": [],
+  "omitted": [
+    { "surface": "backlog item bodies", "reveal": "--fields bodies" },
+    { "surface": "watch/steer actions", "reveal": "--fields actions" },
+    { "surface": "full scout-report inventory", "reveal": "--all-reports" },
+    { "surface": "live PR discovery + checks", "reveal": "--include-prs" }
+  ]
+}

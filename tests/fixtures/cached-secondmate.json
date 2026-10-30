@@ -1,0 +1,29 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not requested (pass --include-prs for live GitHub discovery)",
+  "contributions": { "scope": "owned contributions per home", "known": 0, "checked": 0, "counts": { "captain": 0, "fleet": 0, "maintainer": 0, "nobody": 0 }, "complete": true, "proven_clear": true, "captain": [] },
+  "in_flight": [
+    { "id": "mate-b/index-rebuild", "kind": "ship", "state": "working", "repo": "acme/search", "name": "Rebuild search index", "doing": "indexing" }
+  ],
+  "secondmates": [
+    { "id": "mate-b", "state": "active_child_work", "doing": "index-rebuild: indexing", "provenance": "remote-ledger-cache", "freshness": "cached", "age_seconds": 1800, "contradiction": false, "reason": "-" },
+    { "id": "mate-c", "state": "unknown", "doing": "-", "provenance": "unreadable", "freshness": "unknown", "age_seconds": null, "contradiction": false, "reason": "home summary unavailable: ssh exit 255" }
+  ],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [],
+  "gates": [],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [],
+  "endpoints": [],
+  "omitted": [
+    { "surface": "backlog item bodies", "reveal": "--fields bodies" },
+    { "surface": "watch/steer actions", "reveal": "--fields actions" },
+    { "surface": "full scout-report inventory", "reveal": "--all-reports" },
+    { "surface": "secondmate mate-b served from cached home ledger", "reveal": "inspect the home ledger publication and remote route" },
+    { "surface": "live PR discovery + checks", "reveal": "--include-prs" }
+  ]
+}

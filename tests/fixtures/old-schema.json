@@ -1,0 +1,8 @@
+{
+  "schema": "fm-fleet-snapshot.v1",
+  "generated": "2026-10-30T12:00:00Z",
+  "fm_home": "/home/captain/firstmate",
+  "roots": { "fm_root": "/home/captain/firstmate", "state": "/home/captain/firstmate/state", "data": "/home/captain/firstmate/data" },
+  "backlog": { "path": "/home/captain/firstmate/data/backlog.md", "present": true, "records": [] },
+  "tasks": []
+}
