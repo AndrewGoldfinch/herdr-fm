@@ -322,8 +322,12 @@ export function createController({ host, clock, parse = parseConfig, decode = de
       if (s.disposed || !s.config) return false;
       const home = `${s.config.firstmateHome}/`;
       const cache = `${s.config.firstmateHome}/state/secondmate-summary-cache/`;
+      // Hidden files are ignored, except the ones fm-afk-return.sh reads to decide away mode.
+      const away = new Set([".afk", ".afk-contract", ".afk-return-catchup"].map((n) => `${home}state/${n}`));
       const relevant = (paths ?? []).some(
-        (p) => typeof p === "string" && p.startsWith(home) && !p.startsWith(cache) && !p.slice(home.length).split("/").some((seg) => seg.startsWith(".")),
+        (p) =>
+          typeof p === "string" &&
+          (away.has(p) || (p.startsWith(home) && !p.startsWith(cache) && !p.slice(home.length).split("/").some((seg) => seg.startsWith(".")))),
       );
       if (!relevant) return false;
       if (s.inFlight) s.dirty = true;

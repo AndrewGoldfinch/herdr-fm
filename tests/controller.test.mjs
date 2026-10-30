@@ -168,6 +168,16 @@ test("P18: the collector's own cache writes and hidden files never trigger a col
   assert.equal(env.c.notifyChange([`${HOME}/state/fix-login.meta`]), true);
 });
 
+test("the away guard's hidden files still count as changes", async () => {
+  const env = setup();
+  await env.settle(ok(), await started(env));
+  for (const name of [".afk", ".afk-contract", ".afk-return-catchup"]) {
+    assert.equal(env.c.notifyChange([`${HOME}/state/${name}`]), true, name);
+  }
+  assert.equal(env.c.notifyChange([`${HOME}/state/.afk-scratch/x`]), false, "only the guard's own files");
+  assert.equal(env.c.notifyChange([`${HOME}/data/.afk`]), false, "only under state/");
+});
+
 test("P18: thirty minutes of cache churn costs only fallback collections", async () => {
   const env = setup();
   await env.settle(ok(), await started(env));
