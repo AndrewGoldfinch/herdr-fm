@@ -1,17 +1,19 @@
 # Qualification record (Task 0)
 
-**Status: partial.** Everything below marked *source* was established by reading upstream code at the pinned revisions. Nothing has been run against a live FirstMate home or a Herdr app. Running FirstMate's collector was blocked by this environment's sandbox policy, and no Herdr binary was available.
+**Status: partial.** Items marked *source* were established by reading upstream code at the pinned revisions. Items marked *synthetic* ran FirstMate's real collector at `355a307` against throwaway homes with `scripts/capture-fixtures.sh` (no live harnesses, fake tmux, network tools stubbed). Nothing has run against a live FirstMate home or a Herdr app.
 
-| Item | Source | Live |
-| --- | --- | --- |
-| Checkout ships `fm-bearings-snapshot.sh --json --fields paths,endpoints` returning `fm-bearings.v1` | done | pending |
-| Collector honors `FM_HOME`; `home` is the last two path segments | done | pending |
-| `paths[].status` is `$STATE/<id>.status` | done | pending |
-| Override scrub list | done (below) | re-derive per checkout |
-| Fixtures | hand-written from source | capture and sanitize |
-| Collection latency at 25 and 50 tasks (P17) | bounds read (below) | pending |
-| Collector write set under `data/` and `state/` | cache dir only, by source | pending |
-| SSH and forge reads per collection | read (below) | pending |
+| Item | Source | Synthetic | Live |
+| --- | --- | --- | --- |
+| Checkout ships `fm-bearings-snapshot.sh --json --fields paths,endpoints` returning `fm-bearings.v1` | done | confirmed | pending |
+| Collector honors `FM_HOME`; `home` is the last two path segments | done | confirmed | pending |
+| `paths[].status` is `$STATE/<id>.status` | done | confirmed | pending |
+| Override scrub list | done (below) | — | re-derive per checkout |
+| Fixtures | hand-written | `tests/fixtures/captured/` decodes with no issues | capture from a real home |
+| Not-requested `omitted[]` pairs | read | confirmed, exactly four | — |
+| Away window exits 3 with `fm-afk-return:` | read | confirmed | pending |
+| Collection latency (P17) | bounds read (below) | 25 tasks 4.2 s, 50 tasks 7.5 s | pending with real endpoints |
+| Network attempts with `forgeReads: false`, no secondmates | — | 0 in every run | pending with remote homes |
+| Collector write set under `data/` and `state/` | cache dir only, by source | not measured | pending |
 | Native APIs used by `main.js` | names and arity checked statically (below) | `herdr-app check` pending |
 | First-dock and uninstall behaviour | `mod.json` docking rule read | pending |
 | Fork contains `355a307` | not checked | pending |
@@ -98,8 +100,25 @@ It proves names and argument presence, not argument types, which element a metho
 - `globalThis.performance.now` in QuickJS/LLRT (the controller falls back to `Date.now` with backward-jump clamping if absent).
 - Selectable text for artifact references: not implemented yet; details show plain text.
 
+## Synthetic capture results
+
+`scripts/capture-fixtures.sh` at FirstMate `355a307`, recorded in `tests/fixtures/captured/manifest.json`:
+
+| Scenario | Exit | Time | Bytes | Network attempts |
+| --- | --- | --- | --- | --- |
+| empty | 0 | 0.67 s | 1,165 | 0 |
+| normal | 0 | 0.77 s | 4,054 | 0 |
+| holds | 0 | 0.51 s | 2,772 | 0 |
+| away | 3 | 0.03 s | 0 | 0 |
+| 25 tasks | 0 | 4.2 s | 17,664 | 0 |
+| 50 tasks | 0 | 7.5 s | 30,014 | 0 |
+
+Time grows by roughly 130–150 ms per task here, which would reach Herdr's 30-second limit near 200 tasks. That is a lower bound: these tasks have a fake tmux and no harness, so no endpoint read is slow and none hits the 10-second crew-state bound. P17 still needs real endpoints.
+
+Field sets in the captured output match the hand-written fixtures exactly. Captain's Call held only the live hold; blocked, dated and aged holds were Charted Next gates; a task whose status line asked for a decision without a captain hold stayed in Underway with state `unknown`.
+
 ## Next steps
 
-1. On the qualified host, run the collector against a disposable home, capture the fixture set listed in `tests/fixtures/README.md`, sanitize, and diff shapes against these hand-written ones.
-2. Measure P17 latency and the write set; count SSH and forge reads with `forgeReads` on and off.
+1. On the qualified host, capture from a real disposable home with live harnesses and a registered secondmate; measure P17 with real endpoints and count SSH reads.
+2. Record the collector's write set under `data/` and `state/`.
 3. Install the mod, run `herdr-app check`, record first-dock and uninstall behaviour, and fix any GPUI API mismatches.

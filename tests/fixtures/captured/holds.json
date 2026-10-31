@@ -1,0 +1,116 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not_requested (run: /bearings include PRs)",
+  "contributions": {
+    "scope": "owned contributions per home",
+    "known": 0,
+    "checked": 0,
+    "counts": {
+      "captain": 0,
+      "fleet": 0,
+      "maintainer": 0,
+      "nobody": 0
+    },
+    "complete": true,
+    "proven_clear": true,
+    "unmeasured_homes": 0,
+    "unreadable_records": 0,
+    "unmeasured": 0,
+    "stale_verdicts": 0,
+    "missing_verdicts": 0,
+    "captain_omitted": 0,
+    "captain": []
+  },
+  "in_flight": [
+    {
+      "id": "ask-api",
+      "kind": "ship",
+      "state": "unknown",
+      "repo": "demo",
+      "name": "Migrate API client",
+      "doing": "harness state unavailable (unknown missing)"
+    }
+  ],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [
+    {
+      "id": "pick-db",
+      "key": "pick-db",
+      "verb": "captain-hold",
+      "summary": "Choose session store: captain choice pending",
+      "owner": "(main)"
+    }
+  ],
+  "landed": [],
+  "gates": [
+    {
+      "id": "schema-change",
+      "title": "Approve schema change",
+      "blocked_by": "ask-api",
+      "reason": "blocked-by ask-api: needs schema",
+      "owner": "(main)",
+      "filed": "2026-10-28"
+    },
+    {
+      "id": "vendor-contract",
+      "title": "Sign vendor contract",
+      "blocked_by": "-",
+      "reason": "until 2026-11-15: waiting on vendor",
+      "owner": "(main)",
+      "filed": "2026-10-20"
+    },
+    {
+      "id": "pricing",
+      "title": "Pricing call",
+      "blocked_by": "-",
+      "reason": "held 59d: pricing call",
+      "owner": "(main)",
+      "filed": "2026-09-01"
+    }
+  ],
+  "reports": [],
+  "recorded_prs": [],
+  "paths": [
+    {
+      "id": "ask-api",
+      "worktree": "/home/captain/firstmate/projects/ask-api",
+      "home": "-",
+      "status": "/home/captain/firstmate/state/ask-api.status",
+      "report": "/home/captain/firstmate/data/ask-api/report.md"
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "ask-api",
+      "backend": "tmux",
+      "target": "firstmate:fm-ask-api",
+      "exists": true,
+      "agent": "not_checked"
+    }
+  ],
+  "omitted": [
+    {
+      "surface": "backlog item bodies",
+      "reveal": "--fields bodies"
+    },
+    {
+      "surface": "watch/steer actions",
+      "reveal": "--fields actions"
+    },
+    {
+      "surface": "full scout-report inventory",
+      "reveal": "--all-reports"
+    },
+    {
+      "surface": "captain holds bucketed blocked, dated, or aged: 3",
+      "reveal": "--all-decisions"
+    },
+    {
+      "surface": "live PR discovery + checks",
+      "reveal": "--include-prs"
+    }
+  ]
+}

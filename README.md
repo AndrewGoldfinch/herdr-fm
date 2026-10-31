@@ -2,7 +2,7 @@
 
 A Herdr app mod that shows FirstMate's Bearings picture (Captain's Call, Underway, Recently Landed, Charted Next, secondmates and endpoint warnings) as a native panel docked on the right of the window. It is read-only: it never sends, steers, answers, merges or stops anything.
 
-**Status:** prototype. The pure modules are covered by `node --test`. The mod has **not** yet been loaded by a real Herdr app (`herdr-app check` and the live checks in [Task 3](docs/2026-10-30-firstmate-herdr-technical-spec.md#task-3--integrate-the-native-fleet-view) are pending), and the fixtures are written from FirstMate's source rather than captured from it. See [docs/qualification.md](docs/qualification.md).
+**Status:** prototype. The pure modules are covered by `node --test`. The mod has **not** yet been loaded by a real Herdr app (`herdr-app check` and the live checks in [Task 3](docs/2026-10-30-firstmate-herdr-technical-spec.md#task-3--integrate-the-native-fleet-view) are pending). The decoder is tested against real output from FirstMate's collector on synthetic homes (`tests/fixtures/captured/`, made with `bash scripts/capture-fixtures.sh <firstmate-checkout>`), but not yet against a live home. See [docs/qualification.md](docs/qualification.md).
 
 ## Requirements
 

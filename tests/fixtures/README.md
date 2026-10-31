@@ -1,8 +1,23 @@
 # Fixtures
 
+## Captured (`captured/`)
+
+Real `fm-bearings.v1` output from FirstMate's own collector, written by `bash scripts/capture-fixtures.sh <firstmate-checkout>` against synthetic homes with network tools stubbed out. `captured/manifest.json` records the FirstMate revision, exit codes, timings, byte counts and network attempts (all zero). Lab paths are rewritten so the home reads `/home/captain/firstmate`; the clock is pinned to `2026-10-30T12:00:00Z`, so a recapture at the same revision is identical. `tests/captured.test.mjs` decodes them.
+
+| File | Scenario |
+| --- | --- |
+| `empty.json` | Empty home |
+| `normal.json` | Two live tasks and one whose terminal is gone, a queued gate, a landed PR, a scout report |
+| `holds.json` | Live, blocked, dated and aged captain holds, and a task whose status line asks for a decision without a hold |
+| `manifest.json` | Also records the away run (exit 3) and 25/50-task timings |
+
+The synthetic tasks have no running harness, so every `state` reads `unknown`. Secondmates, truncation and malformed output cannot be produced this way yet; the hand-written fixtures below still cover them.
+
+## Hand-written (this folder)
+
 These fixtures are **source-derived, not captured**. They were written by hand from the `fm-bearings.v1` model that `bin/fm-bearings-snapshot.sh` builds at FirstMate `355a30710d6e545fe57f720896ed440ee5d99a9a` (the jq object assembled near the end of that script), because the producer could not be run when they were made.
 
-Task 0 replaces or confirms each one with sanitized output captured from `bin/fm-bearings-snapshot.sh --json --fields paths,endpoints` on the qualified host. Until then, a passing test proves the panel matches this reading of the source, not the live producer.
+The captured output confirmed their field sets exactly. Values differ only in wording (for example the `prs` note and gate reasons) and in `state`, which is `unknown` without a harness. They stay for the scenarios the capture cannot produce.
 
 All fixtures use the configured home `/home/captain/firstmate`, whose Bearings label is `captain/firstmate`.
 

@@ -1,0 +1,158 @@
+{
+  "schema": "fm-bearings.v1",
+  "home": "captain/firstmate",
+  "generated": "2026-10-30T12:00:00Z",
+  "prs": "not_requested (run: /bearings include PRs)",
+  "contributions": {
+    "scope": "owned contributions per home",
+    "known": 2,
+    "checked": 0,
+    "counts": {
+      "captain": 0,
+      "fleet": 2,
+      "maintainer": 0,
+      "nobody": 0
+    },
+    "complete": false,
+    "proven_clear": false,
+    "unmeasured_homes": 0,
+    "unreadable_records": 0,
+    "unmeasured": 0,
+    "stale_verdicts": 0,
+    "missing_verdicts": 0,
+    "captain_omitted": 0,
+    "captain": []
+  },
+  "in_flight": [
+    {
+      "id": "dead-task",
+      "kind": "ship",
+      "state": "unknown",
+      "repo": "demo",
+      "name": "Task whose terminal is gone",
+      "doing": "backend target gone: firstmate:fm-dead-task"
+    },
+    {
+      "id": "fix-login",
+      "kind": "ship",
+      "state": "unknown",
+      "repo": "demo",
+      "name": "Fix login redirect loop",
+      "doing": "harness state unavailable (unknown missing)"
+    },
+    {
+      "id": "scout-cache",
+      "kind": "scout",
+      "state": "unknown",
+      "repo": "demo",
+      "name": "Survey cache eviction",
+      "doing": "harness state unavailable (unknown missing)"
+    }
+  ],
+  "secondmates": [],
+  "secondmate_reconcile": [],
+  "decisions_open": [],
+  "landed": [
+    {
+      "id": "bump-deps",
+      "what": "Bump dependencies",
+      "artifact": "https://github.com/acme/demo/pull/41",
+      "owner": "(main)"
+    }
+  ],
+  "gates": [
+    {
+      "id": "add-metrics",
+      "title": "Add request metrics",
+      "blocked_by": "fix-login",
+      "reason": "-",
+      "owner": "(main)",
+      "filed": null
+    }
+  ],
+  "reports": [
+    {
+      "id": "scout-cache",
+      "path": "/home/captain/firstmate/data/scout-cache/report.md"
+    }
+  ],
+  "recorded_prs": [
+    {
+      "id": "fix-login",
+      "url": "https://github.com/acme/demo/pull/42"
+    }
+  ],
+  "unhealthy_endpoints": [
+    {
+      "id": "dead-task",
+      "backend": "tmux",
+      "target": "firstmate:fm-dead-task",
+      "exists": false,
+      "agent": "not_checked"
+    }
+  ],
+  "paths": [
+    {
+      "id": "dead-task",
+      "worktree": "/home/captain/firstmate/projects/dead-task",
+      "home": "-",
+      "status": "/home/captain/firstmate/state/dead-task.status",
+      "report": "/home/captain/firstmate/data/dead-task/report.md"
+    },
+    {
+      "id": "fix-login",
+      "worktree": "/home/captain/firstmate/projects/fix-login",
+      "home": "-",
+      "status": "/home/captain/firstmate/state/fix-login.status",
+      "report": "/home/captain/firstmate/data/fix-login/report.md"
+    },
+    {
+      "id": "scout-cache",
+      "worktree": "/home/captain/firstmate/projects/scout-cache",
+      "home": "-",
+      "status": "/home/captain/firstmate/state/scout-cache.status",
+      "report": "/home/captain/firstmate/data/scout-cache/report.md"
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "dead-task",
+      "backend": "tmux",
+      "target": "firstmate:fm-dead-task",
+      "exists": false,
+      "agent": "not_checked"
+    },
+    {
+      "id": "fix-login",
+      "backend": "tmux",
+      "target": "firstmate:fm-fix-login",
+      "exists": true,
+      "agent": "not_checked"
+    },
+    {
+      "id": "scout-cache",
+      "backend": "tmux",
+      "target": "firstmate:fm-scout-cache",
+      "exists": true,
+      "agent": "not_checked"
+    }
+  ],
+  "omitted": [
+    {
+      "surface": "backlog item bodies",
+      "reveal": "--fields bodies"
+    },
+    {
+      "surface": "watch/steer actions",
+      "reveal": "--fields actions"
+    },
+    {
+      "surface": "full scout-report inventory",
+      "reveal": "--all-reports"
+    },
+    {
+      "surface": "live PR discovery + checks",
+      "reveal": "--include-prs"
+    }
+  ]
+}

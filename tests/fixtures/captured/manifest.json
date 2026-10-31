@@ -1,0 +1,62 @@
+{
+  "firstmate_revision": "355a30710d6e545fe57f720896ed440ee5d99a9a",
+  "collector": "bin/fm-bearings-snapshot.sh --json --fields paths,endpoints",
+  "bearings_now": "2026-10-30T12:00:00Z",
+  "forge_reads": false,
+  "runs": [
+    {
+      "scenario": "empty",
+      "exit": 0,
+      "elapsed_ms": 673,
+      "bytes": 1165,
+      "network_attempts": 0,
+      "stderr_first_line": "",
+      "kept": true
+    },
+    {
+      "scenario": "normal",
+      "exit": 0,
+      "elapsed_ms": 767,
+      "bytes": 4054,
+      "network_attempts": 0,
+      "stderr_first_line": "",
+      "kept": true
+    },
+    {
+      "scenario": "holds",
+      "exit": 0,
+      "elapsed_ms": 506,
+      "bytes": 2772,
+      "network_attempts": 0,
+      "stderr_first_line": "",
+      "kept": true
+    },
+    {
+      "scenario": "away",
+      "exit": 3,
+      "elapsed_ms": 31,
+      "bytes": 0,
+      "network_attempts": 0,
+      "stderr_first_line": "fm-afk-return: away mode is still active; run bin/fm-afk-return.sh before ordinary captain work",
+      "kept": false
+    },
+    {
+      "scenario": "scale-25",
+      "exit": 0,
+      "elapsed_ms": 4192,
+      "bytes": 17664,
+      "network_attempts": 0,
+      "stderr_first_line": "",
+      "kept": false
+    },
+    {
+      "scenario": "scale-50",
+      "exit": 0,
+      "elapsed_ms": 7484,
+      "bytes": 30014,
+      "network_attempts": 0,
+      "stderr_first_line": "",
+      "kept": false
+    }
+  ]
+}
