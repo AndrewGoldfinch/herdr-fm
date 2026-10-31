@@ -27,6 +27,8 @@ Build a companion Herdr mod that renders FirstMate's Bearings model. Do not reim
 
 No live validation has been performed for this revision.
 
+**Revision 3.1 — October 31, 2026:** Tracks FirstMate PR #8011 (worker-side OSC 7501 reporting) as a possible integration enhancement, and adds model-pin readback (I11) and state-preservation regressions (I12) to the hc qualification matrix. The observational snapshot design is unchanged; see “Tracked upstream proposals”.
+
 **Revision 2** adopted upstream `hc` instead of building a backend. That work continues in the hc qualification document.
 
 The prototype answers: what needs the captain, what is underway, what has landed, what is charted next, and how trustworthy is that observation? It must improve navigation without introducing a second source of task truth or a second classification of it.
@@ -55,6 +57,18 @@ The user requested this specification after the panel-first recommendation. Deta
 | Herdr 1 project groups | `bin/fm-herdr-groups.sh` | Old Herdr only; no herdr-app equivalent |
 
 When reviewed, herdr.dev/mods listed one community mod (tmux prefix). No FirstMate or fleet panel exists there.
+
+### Tracked upstream proposals
+
+**Worker-side OSC 7501 reporting, FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011)** (open on October 31, 2026). Tracked as a possible integration enhancement; the [hc qualification specification](2026-10-30-firstmate-hc-qualification-spec.md#tracked-enhancement-worker-side-osc-7501-reporting-firstmate-8011) holds its conditional probes. If merged, each FirstMate worker's terminal carries an OSC 7501 record (`app=firstmate-<harness>`) unless the harness reports natively. Consequences for this panel:
+
+- Herdr's Agents list would show “Needs you” for a worker whose status line is an open `needs-decision`, before any captain hold exists. Captain's Call shows only live captain holds. The two will disagree by design. That disagreement is the reason section 6 keeps FirstMate's section names apart from Herdr's agent words.
+- The phase 1b terminal join gains a FirstMate-originated status for non-native harnesses. It must show the record's `app` so a FirstMate-derived status is never read as the harness's own.
+- It changes no file the panel reads: Bearings and the canonical snapshot are untouched, and the bridge's watcher files are hidden files under `state/`, which the watch filter already ignores.
+
+Model-pin readback and state-preservation regressions are qualification work, recorded as I11 and I12 in the hc qualification specification. The panel does not show models. If it ever does, it must label them as requested pins, not the model in use.
+
+None of this warrants replacing the observational snapshot design yet. An OSC 7501 record is one live terminal's current status. It carries no captain holds, gates, landed work, secondmate summaries or disclosures, and it disappears with the terminal. Revisit only if FirstMate's Stage 3 core/app integration publishes a contract that carries those, and re-review this specification before adopting it.
 
 ### Prototype includes
 
@@ -414,7 +428,7 @@ Roll out manually to one home. Roll back by removing the mod; no task-state migr
 
 The panel is backend-agnostic: it renders whatever backend Bearings reports. hc backend qualification proceeds on its own schedule under the [hc qualification specification](2026-10-30-firstmate-hc-qualification-spec.md), and its results do not gate phase 1.
 
-**Phase 1b terminal join.** For a main-home task whose `endpoints[]` row has `backend == "hc"`, `target` is `<session>:<address>`. When the session is `default`, the one Herdr.app shows, find the `terminals()` entry with that address and label `firstmate.task == "fm-<id>"`, and show its live `status` beside FirstMate's state, labelled as terminal status. No match, or a label mismatch, shows “terminal not matched”. Read it in `render`; do not poll it. The match never authorizes an action.
+**Phase 1b terminal join.** For a main-home task whose `endpoints[]` row has `backend == "hc"`, `target` is `<session>:<address>`. When the session is `default`, the one Herdr.app shows, find the `terminals()` entry with that address and label `firstmate.task == "fm-<id>"`, and show its live `status` beside FirstMate's state, labelled as terminal status together with the reporting `app` from its `report` (the harness itself, or `firstmate-<harness>` if FirstMate #8011 is in use). No match, or a label mismatch, shows “terminal not matched”. Read it in `render`; do not poll it. The match never authorizes an action.
 
 **Phase 1b ledger times.** When `config/fleet-ledger` is on, `task.merged` records give merge times for main-home landed rows. `readTextFile` stops at 1 MiB and the ledger only grows, so phase 1b must first qualify a bounded tail read.
 

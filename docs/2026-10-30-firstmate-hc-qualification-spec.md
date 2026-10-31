@@ -32,6 +32,8 @@ The opening contract of the adapter in `AndrewGoldfinch/firstmate`, branch `expe
 
 Qualify Herdr app **0.1.10** with herdr-core **0.1.15** as the initial target pair. Record actual binary versions, build revisions and checksums. Changelogs confirm these releases, not their compatibility with this project. App 0.1.10 fixes `herdr-app check` crashes involving scrolling lists and layout animations; core 0.1.15 fixes restoration of kept terminals and spaces after shutdown or reboot. Restored shells do not establish task resumption.
 
+FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011) (“feat: report worker status through OSC 7501”, open on October 31, 2026, branched from `355a307`) is tracked as an enhancement in section 6, not adopted. It touches none of the files the adapter contract or the fleet panel reads.
+
 Upstream verification primarily uses core 0.1.13 on macOS, plus a 0.1.14 socket-precedence probe. It reports lifecycle smoke tests, a stand-in scout's spawn/send/peek/teardown, and bare Claude Code/Codex liveness. Real-harness spawn, ship spawn, real composer submit confirmation, native status under FirstMate launch and app grouping remain explicitly unverified. Pi/OpenCode were not installed in that live guard. These are upstream-reported results, not tests run for this project.
 
 ## 3. Existing adapter contract to preserve
@@ -72,17 +74,43 @@ Use harmless synthetic repositories and bounded prompts. Existing agent authenti
 | I08 | Parent loss and core restart | Expected independent lifetime on parent exit; crash/restart state is honest, no duplicate launch or false resumed-agent claim |
 | I09 | Kept-terminal restore and stale callbacks | Test kept-shell restoration separately from non-kept FirstMate tasks; delayed old observations never update a replacement generation |
 | I10 | Unsupported modes | hc secondmate attempts fail clearly; existing child summaries remain displayable without probing or spawning them |
+| I11 | Model-pin readback | For each harness launched with `--model` (and `--effort`), the pin FirstMate records (`model=`/`effort=` in task metadata, `model` in the ledger's `task.dispatched`) matches the launch argv read back through `hc get` (foreground and process group) and, where the harness exposes it, the model the harness itself reports. Repeat after `--relaunch` and after core restart |
+| I12 | State-preservation regressions | Task metadata (`spawn_gen`, `backend`, `hc_session`, `hc_terminal`, `model`, `effort`), status log and backlog are byte-identical before and after each of: app restart, app update, core restart, kept-terminal restore, fleet-panel collection, panel close and hot reload. Only documented writes differ (the collector's `state/secondmate-summary-cache/`, FirstMate's own status appends) |
 
 For I07 classify each dimension as PASS, FAIL, NOT RUN or UNSUPPORTED, recording exact versions. Missing native status is displayed as unknown by any consumer and blocks claims of native-status support. Missing installation/authentication is NOT RUN, not UNSUPPORTED.
+
+For I11, FirstMate threads `--model` only into harnesses verified to support that axis and omits it otherwise, and some harnesses accept an invalid model at launch (`bin/fm-spawn.sh` header). A pin that was omitted, not applied or not readable is NOT APPLIED or UNKNOWN, never PASS. Argv alone proves the flag was passed, not the model in use; record which evidence each row rests on. hc's OSC 7501 status (`state`, `kind`, `progress`, `app`, `title`, `msg`) has no model field, so hc offers no native readback.
+
+For I12, diff the files themselves, not their summaries, and record the method. Any unexplained byte change fails the row, including a change that leaves the projection identical. Rerun I12 whenever the adapter, the launch path or the panel's collector invocation changes; it is the regression guard for the restart behaviour I08 and I09 qualify.
 
 ## 6. Phases
 
 | Phase | Deliverable | Entry / exit condition |
 | --- | --- | --- |
 | H1 — first integration milestone | One real FirstMate task launched, visible in Herdr, steered, inspected and terminated without affecting a sentinel task | I01–I04 pass for one installed real harness on app 0.1.10 / core 0.1.15 |
-| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I10 run; every advertised supported combination passes its required tests |
+| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I12 run; every advertised supported combination passes its required tests |
 
-H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I10 safety tests and per-harness results. Do not claim all four harnesses from a stand-in or bare-process liveness test.
+H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I12 safety tests and per-harness results. Do not claim all four harnesses from a stand-in or bare-process liveness test. Do not claim a harness honours model pins without its I11 row, or that any restart path preserves task state without I12.
+
+### Tracked enhancement: worker-side OSC 7501 reporting (FirstMate #8011)
+
+PR #8011 adds `bin/fm-osc7501.sh`, armed by `fm-spawn.sh` inside each launch, which writes OSC 7501 root records (`app=firstmate-<harness>`, `title=fm-<task>`) to the worker's own terminal. It maps an open `needs-decision` or held status to `blocked` (`kind=question`), `blocked` to `blocked` (`kind=permission` or `auth`), busy activity to `working`, `failed` to `error` and `done` to `done`. It is on by default per home (`config/osc7501-status`), stands down for harnesses that report natively (Claude Code ≥ 2.1.295, Pi ≥ 1.1.0 per the PR), and skips `backend=herdr` and `t3code`. The PR calls it Stage 2 of a staged herdr-core/app plan, with core/app integration as Stage 3.
+
+Why it is tracked rather than adopted:
+
+- It is open. The automated review at the time of reading still listed two P1 issues: the capability probe can consume typed input on unknown terminals, and on Rex the bridge's own `working` record can keep a finished worker busy.
+- It would answer I07's “native status under real FirstMate launches” for non-native harnesses, but with FirstMate-derived status, not the harness's own. Rows must record which reporter produced the status.
+- It changes no file the adapter contract or the fleet panel reads.
+
+If it merges, add these conditional probes before relying on it, classified like I07:
+
+| ID | Probe | Required evidence |
+| --- | --- | --- |
+| O1 | Mapping | For each status-log state above, `hc get` `.status` shows the mapped record with `app=firstmate-<harness>` |
+| O2 | Native stand-down | A native-reporting harness version gets no FirstMate record; an older version does |
+| O3 | Input safety | Typed input during launch on an unknown terminal reaches the worker intact; the saved `stty` mode is restored |
+| O4 | Lifecycle | After agent exit, parent death, `--relaunch` and teardown: one watcher per terminal, `done`/`error` kept, otherwise `idle`; a finished worker is never left `working` |
+| O5 | Restart | After core restart and kept-terminal restore, no stale `working` record outlives the agent; I12 still passes |
 
 ### Hardening after qualification
 
@@ -96,12 +124,15 @@ Event-driven supervision remains optional future work. If introduced, honor init
 
 **Files:** `docs/hc-qualification.md`, `eval/hc-matrix.csv`, `eval/hc-scenarios.md`; any actual adapter fixes belong in the isolated FirstMate checkout, not the panel mod.
 
-**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I10.
+**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I12.
 
 - [ ] Confirm the selected checkout contains commit `355a30710d6e545fe57f720896ed440ee5d99a9a` or an inspected equivalent and its dependencies; record the actual checkout SHA.
 - [ ] Run from that checkout: `bash tests/fm-backend-hc.test.sh`, `bash tests/fm-backend-hc-smoke.test.sh`, and `bash tests/fm-backend-hc-liveness-live-e2e.test.sh`. Require the documented completion markers and inspect skipped-harness output; exit zero alone is insufficient.
 - [ ] Run I02–I04 in the disposable default-session app setup, using existing FirstMate commands, one real harness and a sentinel. Record the artifact, steering result, visual identity and teardown evidence.
 - [ ] Run I05–I10 in their appropriate private/default environments. Record one row per test/harness/version with result and evidence path; do not mark planned probes as completed.
+- [ ] Run I11 for every installed harness with and without `--model`/`--effort`, recording the evidence each result rests on (metadata, argv, harness report).
+- [ ] Snapshot task metadata, status logs and backlog, run each I12 trigger, and diff the files; attach the diffs to the row.
+- [ ] If FirstMate #8011 has merged into the selected checkout, run O1–O5 and record which reporter produced each status; otherwise record the PR as NOT RUN.
 - [ ] If a probe fails, add a focused regression test in FirstMate before modifying its adapter. Preserve existing selection/ownership safeguards and rerun affected upstream tests.
 - [ ] Commit the qualification report independently of panel code. A failed milestone leaves the hc integration explicitly experimental.
 
@@ -109,6 +140,8 @@ Event-driven supervision remains optional future work. If introduced, honor init
 
 Reviewed October 30, 2026. Source pins are review baselines, not a claim that later releases are compatible. The changelog links follow upstream; qualification must record immutable revisions and binary checksums.
 
+- [FirstMate PR #8011: worker status through OSC 7501](https://github.com/kunchenguid/firstmate/pull/8011) (tracked, open)
+- [OSC 7501 Program Status Protocol proposal](https://control-codes.page/proposals/osc-7501/) (revision 0.4, as cited by the PR)
 - [Upstream hc implementation commit](https://github.com/kunchenguid/firstmate/commit/355a30710d6e545fe57f720896ed440ee5d99a9a)
 - [hc backend operator contract](https://github.com/kunchenguid/firstmate/blob/355a30710d6e545fe57f720896ed440ee5d99a9a/docs/hc-backend.md)
 - [hc adapter source](https://github.com/kunchenguid/firstmate/blob/355a30710d6e545fe57f720896ed440ee5d99a9a/bin/backends/hc.sh)
