@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. The execution method is chosen at implementation time. Checkboxes track proposed work, not completed work.
 
-**Goal:** Establish whether FirstMate's experimental upstream `hc` execution backend runs real FirstMate tasks correctly with Herdr app 0.1.10 and herdr-core 0.1.15, and fix demonstrated gaps narrowly.
+**Goal:** Establish whether FirstMate's experimental upstream `hc` execution backend runs real FirstMate tasks correctly with Herdr app 0.1.10 / herdr-core 0.1.15 and app 0.1.11 / core 0.1.16, and fix demonstrated gaps narrowly.
 
 **Relationship to the fleet panel:** This work was split out of the [fleet panel specification](2026-10-30-firstmate-herdr-technical-spec.md) in its revision 3. The panel consumes no interface from it and renders whatever backend FirstMate's Bearings model reports. A failure here blocks claims of an integrated hc setup; it does not block the panel.
 
@@ -24,13 +24,22 @@ Source review established the following, not live interoperability:
 | --- | --- | --- |
 | FirstMate upstream | `355a30710d6e545fe57f720896ed440ee5d99a9a` | Experimental `bin/backends/hc.sh`, `docs/hc-backend.md` and the verification record; adoption baseline |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (the 0.1.15 release commit) | `hc` CLI, including `run --no-parent --outlive-parent --no-notify --keep`; terminal RPCs, status and event semantics |
+| Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`v0.1.16`) | Same CLI and protocol; core–holder reconnect (#47); `shell = [...]` in `config.toml` for new terminals and keep recovery |
 | Herdr app | `8180cbe6c947519e8015dd7c35801a93e08a7d66` (two commits before `v0.1.10`) | Display of the `default` session; `herdr.space` / `herdr.tab` label adoption |
+| Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`) | Same; mods run on the QuickJS interpreter instead of the JIT |
 
 The old `herdr` adapter is not interchangeable with `hc`: it uses old CLI commands, pane targets and pane events. The new core has terminal addresses, separate app presentation, program-reported status and a different event protocol. Do not alias `herdr` to `hc` or silently redirect the old backend.
 
 The opening contract of the adapter in `AndrewGoldfinch/firstmate`, branch `experiment/pi-durable-supervision`, still describes the older `herdr` session/workspace/tab/pane interface. That inspection does not establish whether `355a307` is present in Andrew's branch. Check ancestry and dependencies before adoption, without modifying the held Pi Durable experiment implicitly.
 
-Qualify Herdr app **0.1.10** with herdr-core **0.1.15** as the initial target pair. Record actual binary versions, build revisions and checksums. Changelogs confirm these releases, not their compatibility with this project. App 0.1.10 fixes `herdr-app check` crashes involving scrolling lists and layout animations; core 0.1.15 fixes restoration of kept terminals and spaces after shutdown or reboot. Restored shells do not establish task resumption.
+Qualify two target pairs: Herdr app **0.1.10** with herdr-core **0.1.15**, and app **0.1.11** with core **0.1.16**. Record actual binary versions, build revisions and checksums, and record every matrix row against its pair. Changelogs confirm these releases, not their compatibility with this project. App 0.1.10 fixes `herdr-app check` crashes involving scrolling lists and layout animations; core 0.1.15 fixes restoration of kept terminals and spaces after shutdown or reboot. Restored shells do not establish task resumption.
+
+Core 0.1.16 fixes terminals freezing when the core falls behind or loses contact with its holder. The core reconnects instead and programs keep running (`a5ed044`, `cfbb01d`, `7487a93`, `b52679c`). It also changes two behaviours the adapter depends on:
+
+- A terminal started during a reconnect stays reachable.
+- Stopping the core ends programs it lost touch with, and a kept terminal that restarts during a reconnect reports that it restarted.
+
+It also adds `shell = [...]` in `config.toml`, which chooses the shell for new terminals and for keep recovery. The hc adapter creates task terminals with no argv and types a POSIX launch line into them, so a configured non-POSIX shell is a new failure mode (I13). The CLI and protocol schema are otherwise unchanged. App 0.1.11 changes nothing the adapter uses.
 
 FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011) (“feat: report worker status through OSC 7501”, open on October 31, 2026, branched from `355a307`) is tracked as an enhancement in section 6, not adopted. It touches none of the files the adapter contract or the fleet panel reads.
 
@@ -76,10 +85,14 @@ Use harmless synthetic repositories and bounded prompts. Existing agent authenti
 | I10 | Unsupported modes | hc secondmate attempts fail clearly; existing child summaries remain displayable without probing or spawning them |
 | I11 | Model-pin readback | For each harness launched with `--model` (and `--effort`), the pin FirstMate records (`model=`/`effort=` in task metadata, `model` in the ledger's `task.dispatched`) matches the launch argv read back through `hc get` (foreground and process group) and, where the harness exposes it, the model the harness itself reports. Repeat after `--relaunch` and after core restart |
 | I12 | State-preservation regressions | Task metadata (`spawn_gen`, `backend`, `hc_session`, `hc_terminal`, `model`, `effort`), status log and backlog are byte-identical before and after each of: app restart, app update, core restart, kept-terminal restore, fleet-panel collection, panel close and hot reload. Only documented writes differ (the collector's `state/secondmate-summary-cache/`, FirstMate's own status appends) |
+| I13 | Configured default shell (core 0.1.16) | With `shell = ["fish"]` and then `shell = ["nu"]` in `config.toml`, a FirstMate spawn either runs its launch line correctly or refuses with a clear reason; never a half-typed launch or a worker in the wrong directory. Repeat for keep recovery after a core restart |
+| I14 | Core–holder reconnect (core 0.1.16) | Break the core–holder link during spawn, `send`, capture and teardown. A terminal started during the reconnect stays reachable; a running worker keeps running and is still found by its labels; a kept terminal that restarted reports it and is not read as a live agent; a program ended by stopping the core is recorded dead with no duplicate launch; I12 still passes |
 
 For I07 classify each dimension as PASS, FAIL, NOT RUN or UNSUPPORTED, recording exact versions. Missing native status is displayed as unknown by any consumer and blocks claims of native-status support. Missing installation/authentication is NOT RUN, not UNSUPPORTED.
 
 For I11, FirstMate threads `--model` only into harnesses verified to support that axis and omits it otherwise, and some harnesses accept an invalid model at launch (`bin/fm-spawn.sh` header). A pin that was omitted, not applied or not readable is NOT APPLIED or UNKNOWN, never PASS. Argv alone proves the flag was passed, not the model in use; record which evidence each row rests on. hc's OSC 7501 status (`state`, `kind`, `progress`, `app`, `title`, `msg`) has no model field, so hc offers no native readback.
+
+For I13 and I14, upstream's own reconnect tests use a proxy between core and holder; use the same technique in a private core, not the user's default one. Run them on core 0.1.15 too: there the expected result is the freeze the fix addresses, recorded as FAIL on that pair, not skipped.
 
 For I12, diff the files themselves, not their summaries, and record the method. Any unexplained byte change fails the row, including a change that leaves the projection identical. Rerun I12 whenever the adapter, the launch path or the panel's collector invocation changes; it is the regression guard for the restart behaviour I08 and I09 qualify.
 
@@ -87,10 +100,10 @@ For I12, diff the files themselves, not their summaries, and record the method. 
 
 | Phase | Deliverable | Entry / exit condition |
 | --- | --- | --- |
-| H1 — first integration milestone | One real FirstMate task launched, visible in Herdr, steered, inspected and terminated without affecting a sentinel task | I01–I04 pass for one installed real harness on app 0.1.10 / core 0.1.15 |
-| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I12 run; every advertised supported combination passes its required tests |
+| H1 — first integration milestone | One real FirstMate task launched, visible in Herdr, steered, inspected and terminated without affecting a sentinel task | I01–I04 pass for one installed real harness on one target pair (app 0.1.10 / core 0.1.15 or app 0.1.11 / core 0.1.16), recorded against that pair |
+| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I14 run on each target pair; every advertised supported combination passes its required tests |
 
-H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I12 safety tests and per-harness results. Do not claim all four harnesses from a stand-in or bare-process liveness test. Do not claim a harness honours model pins without its I11 row, or that any restart path preserves task state without I12.
+H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I14 safety tests and per-harness results, per target pair. Do not claim all four harnesses from a stand-in or bare-process liveness test. Do not claim a harness honours model pins without its I11 row, or that any restart path preserves task state without I12, or reconnect behaviour without I14 on that pair.
 
 ### Tracked enhancement: worker-side OSC 7501 reporting (FirstMate #8011)
 
@@ -124,7 +137,7 @@ Event-driven supervision remains optional future work. If introduced, honor init
 
 **Files:** `docs/hc-qualification.md`, `eval/hc-matrix.csv`, `eval/hc-scenarios.md`; any actual adapter fixes belong in the isolated FirstMate checkout, not the panel mod.
 
-**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I12.
+**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I14 on each target pair.
 
 - [ ] Confirm the selected checkout contains commit `355a30710d6e545fe57f720896ed440ee5d99a9a` or an inspected equivalent and its dependencies; record the actual checkout SHA.
 - [ ] Run from that checkout: `bash tests/fm-backend-hc.test.sh`, `bash tests/fm-backend-hc-smoke.test.sh`, and `bash tests/fm-backend-hc-liveness-live-e2e.test.sh`. Require the documented completion markers and inspect skipped-harness output; exit zero alone is insufficient.
@@ -132,6 +145,7 @@ Event-driven supervision remains optional future work. If introduced, honor init
 - [ ] Run I05–I10 in their appropriate private/default environments. Record one row per test/harness/version with result and evidence path; do not mark planned probes as completed.
 - [ ] Run I11 for every installed harness with and without `--model`/`--effort`, recording the evidence each result rests on (metadata, argv, harness report).
 - [ ] Snapshot task metadata, status logs and backlog, run each I12 trigger, and diff the files; attach the diffs to the row.
+- [ ] Run I13 and I14 in a private core on core 0.1.16, and again on 0.1.15 to record the difference.
 - [ ] If FirstMate #8011 has merged into the selected checkout, run O1–O5 and record which reporter produced each status; otherwise record the PR as NOT RUN.
 - [ ] If a probe fails, add a focused regression test in FirstMate before modifying its adapter. Preserve existing selection/ownership safeguards and rerun affected upstream tests.
 - [ ] Commit the qualification report independently of panel code. A failed milestone leaves the hc integration explicitly experimental.

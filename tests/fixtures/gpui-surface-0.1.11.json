@@ -1,0 +1,1487 @@
+{
+ "source": {
+  "repo": "herdrdev/herdr-app",
+  "revision": "e12fd31866f33cb613922d0b33ea506e6f23ce3c",
+  "files": [
+   "vendor/gpui-kit/crates/shell/src/style.rs",
+   "vendor/gpui-kit/crates/shell/src/engine/quickjs/mod.rs",
+   "vendor/gpui-pre/src/styled.rs",
+   "defaults/herdr.d.ts",
+   "defaults/AGENTS.md",
+   "defaults/mods/**/*.js",
+   "defaults/frame/**/*.js"
+  ],
+  "shippedFiles": 37
+ },
+ "paramStyles": [
+  "bg",
+  "border",
+  "border_b",
+  "border_color",
+  "border_l",
+  "border_r",
+  "border_t",
+  "border_x",
+  "border_y",
+  "bottom",
+  "flex_basis",
+  "flex_grow",
+  "flex_shrink",
+  "font_family",
+  "font_weight",
+  "gap",
+  "gap_x",
+  "gap_y",
+  "h",
+  "inset",
+  "left",
+  "line_height",
+  "m",
+  "max_h",
+  "max_size",
+  "max_w",
+  "mb",
+  "min_h",
+  "min_size",
+  "min_w",
+  "ml",
+  "mr",
+  "mt",
+  "mx",
+  "my",
+  "opacity",
+  "p",
+  "pb",
+  "pl",
+  "pr",
+  "pt",
+  "px",
+  "py",
+  "right",
+  "rounded",
+  "rounded_b",
+  "rounded_bl",
+  "rounded_br",
+  "rounded_l",
+  "rounded_r",
+  "rounded_t",
+  "rounded_tl",
+  "rounded_tr",
+  "size",
+  "text_bg",
+  "text_color",
+  "text_size",
+  "top",
+  "w"
+ ],
+ "behaviors": [
+  "accessibility_label",
+  "aria_active_descendant",
+  "aria_level",
+  "aria_selected",
+  "checked",
+  "column_count",
+  "controls_right",
+  "default_open",
+  "disabled",
+  "href",
+  "id",
+  "indeterminate",
+  "keep_mounted",
+  "key_context",
+  "on_action",
+  "on_change",
+  "on_click",
+  "on_confirm",
+  "on_dismiss",
+  "on_drop",
+  "on_hover",
+  "on_item_click",
+  "on_item_secondary_click",
+  "on_key_down",
+  "on_key_up",
+  "on_link_click",
+  "on_modifiers_changed",
+  "on_mouse_down",
+  "on_mouse_down_out",
+  "on_mouse_move",
+  "on_mouse_up",
+  "on_open_change",
+  "on_resize",
+  "on_scroll_wheel",
+  "on_size_change",
+  "on_step",
+  "on_token_click",
+  "on_token_hover",
+  "open",
+  "overflow_scroll",
+  "overflow_scrollbar",
+  "overflow_x_scroll",
+  "overflow_x_scrollbar",
+  "overflow_y_scroll",
+  "overflow_y_scrollbar",
+  "overlay_closable",
+  "pressed",
+  "role",
+  "row_count",
+  "scrollable",
+  "selectable",
+  "selected",
+  "set_position",
+  "start",
+  "tab_index",
+  "tab_stop",
+  "token",
+  "tooltip",
+  "value",
+  "viewport_from_layout",
+  "with_item_to_measure_index"
+ ],
+ "jsMethods": [
+  "active",
+  "anchor",
+  "axis",
+  "caret_style",
+  "cell_active_style",
+  "cell_style",
+  "child",
+  "children",
+  "close_delay",
+  "close_panel",
+  "content",
+  "content_focus_handle",
+  "decrement_button",
+  "drag_tab",
+  "drop_tab",
+  "fallback",
+  "focus",
+  "footer",
+  "frame_budget",
+  "frames",
+  "header",
+  "hover",
+  "image",
+  "increment_button",
+  "input",
+  "loop",
+  "map",
+  "mode",
+  "mouse_button",
+  "open_delay",
+  "panel",
+  "range_style",
+  "resize_dock",
+  "scroll_size",
+  "select_tab",
+  "size_range",
+  "spin",
+  "spring",
+  "toggle_dock",
+  "toggle_zoom",
+  "track_focus",
+  "track_scroll",
+  "transition",
+  "trigger",
+  "when"
+ ],
+ "styledNullary": [
+  "aspect_square",
+  "block",
+  "border_dashed",
+  "col_end_auto",
+  "col_span_full",
+  "col_start_auto",
+  "content_around",
+  "content_between",
+  "content_center",
+  "content_end",
+  "content_evenly",
+  "content_normal",
+  "content_start",
+  "content_stretch",
+  "debug",
+  "debug_below",
+  "flex",
+  "flex_1",
+  "flex_auto",
+  "flex_col",
+  "flex_col_reverse",
+  "flex_grow_0",
+  "flex_grow_1",
+  "flex_initial",
+  "flex_none",
+  "flex_nowrap",
+  "flex_row",
+  "flex_row_reverse",
+  "flex_shrink_0",
+  "flex_shrink_1",
+  "flex_wrap",
+  "flex_wrap_reverse",
+  "grid",
+  "hidden",
+  "italic",
+  "items_baseline",
+  "items_center",
+  "items_end",
+  "items_start",
+  "items_stretch",
+  "justify_around",
+  "justify_between",
+  "justify_center",
+  "justify_end",
+  "justify_evenly",
+  "justify_start",
+  "line_through",
+  "not_italic",
+  "row_end_auto",
+  "row_span_full",
+  "row_start_auto",
+  "self_baseline",
+  "self_center",
+  "self_end",
+  "self_flex_end",
+  "self_flex_start",
+  "self_start",
+  "self_stretch",
+  "text_2xl",
+  "text_3xl",
+  "text_base",
+  "text_center",
+  "text_decoration_0",
+  "text_decoration_1",
+  "text_decoration_2",
+  "text_decoration_4",
+  "text_decoration_8",
+  "text_decoration_none",
+  "text_decoration_solid",
+  "text_decoration_wavy",
+  "text_ellipsis",
+  "text_ellipsis_middle",
+  "text_ellipsis_start",
+  "text_left",
+  "text_lg",
+  "text_right",
+  "text_sm",
+  "text_xl",
+  "text_xs",
+  "truncate",
+  "underline",
+  "whitespace_normal",
+  "whitespace_nowrap"
+ ],
+ "herdrExports": [
+  "agents",
+  "appHome",
+  "closeOverlay",
+  "commands",
+  "exec",
+  "feedbackAttachImages",
+  "feedbackClearImages",
+  "feedbackPasteImage",
+  "feedbackPickImages",
+  "feedbackPreview",
+  "focused",
+  "fonts",
+  "hc",
+  "home",
+  "keys",
+  "knownAgents",
+  "layout",
+  "layouts",
+  "machines",
+  "nextCommand",
+  "notify",
+  "openOverlay",
+  "panes",
+  "pickFolder",
+  "placement",
+  "playSound",
+  "presentUpdateNotes",
+  "props",
+  "readTextFile",
+  "run",
+  "sendFeedback",
+  "setAgentOrder",
+  "setShared",
+  "settings",
+  "shared",
+  "spaces",
+  "telemetry",
+  "terminals",
+  "theme",
+  "themes",
+  "updates",
+  "watchFolder",
+  "window",
+  "writeTextFile"
+ ],
+ "imports": {
+  "gpui-kit": [
+   "Background",
+   "PathBuilder",
+   "View",
+   "div",
+   "image",
+   "svg"
+  ],
+  "gpui-base": [
+   "Editor",
+   "EditorState",
+   "Input",
+   "InputState",
+   "Scrollbar",
+   "Textarea",
+   "TextareaState",
+   "h_flex",
+   "v_flex",
+   "v_virtual_list"
+  ]
+ },
+ "themeColors": [
+  "accent",
+  "accent_foreground",
+  "ansi0",
+  "ansi1",
+  "ansi10",
+  "ansi11",
+  "ansi12",
+  "ansi13",
+  "ansi14",
+  "ansi15",
+  "ansi2",
+  "ansi3",
+  "ansi4",
+  "ansi5",
+  "ansi6",
+  "ansi7",
+  "ansi8",
+  "ansi9",
+  "background",
+  "blocked",
+  "border",
+  "canvas",
+  "chrome",
+  "dim",
+  "done",
+  "foreground",
+  "hover",
+  "idle",
+  "input",
+  "muted",
+  "popover",
+  "raised",
+  "selected",
+  "selection",
+  "solid",
+  "solid_foreground",
+  "surface",
+  "unknown",
+  "working"
+ ],
+ "shipped": {
+  "abs": {
+   "args": true,
+   "noArgs": false
+  },
+  "absolute": {
+   "args": false,
+   "noArgs": true
+  },
+  "active": {
+   "args": true,
+   "noArgs": false
+  },
+  "add": {
+   "args": true,
+   "noArgs": false
+  },
+  "after": {
+   "args": true,
+   "noArgs": false
+  },
+  "alerts": {
+   "args": true,
+   "noArgs": false
+  },
+  "apps": {
+   "args": false,
+   "noArgs": true
+  },
+  "at": {
+   "args": true,
+   "noArgs": false
+  },
+  "balloon": {
+   "args": true,
+   "noArgs": false
+  },
+  "bar": {
+   "args": true,
+   "noArgs": false
+  },
+  "begin": {
+   "args": true,
+   "noArgs": false
+  },
+  "bg": {
+   "args": true,
+   "noArgs": false
+  },
+  "bind_keys": {
+   "args": true,
+   "noArgs": false
+  },
+  "boot": {
+   "args": true,
+   "noArgs": false
+  },
+  "border": {
+   "args": true,
+   "noArgs": false
+  },
+  "border_1": {
+   "args": false,
+   "noArgs": true
+  },
+  "border_2": {
+   "args": false,
+   "noArgs": true
+  },
+  "border_b": {
+   "args": true,
+   "noArgs": false
+  },
+  "border_color": {
+   "args": true,
+   "noArgs": false
+  },
+  "border_l": {
+   "args": true,
+   "noArgs": false
+  },
+  "border_r": {
+   "args": true,
+   "noArgs": false
+  },
+  "border_t": {
+   "args": true,
+   "noArgs": false
+  },
+  "bottom": {
+   "args": true,
+   "noArgs": false
+  },
+  "btn": {
+   "args": true,
+   "noArgs": false
+  },
+  "build": {
+   "args": false,
+   "noArgs": true
+  },
+  "button": {
+   "args": true,
+   "noArgs": false
+  },
+  "buttons": {
+   "args": true,
+   "noArgs": false
+  },
+  "call": {
+   "args": true,
+   "noArgs": false
+  },
+  "cancel": {
+   "args": false,
+   "noArgs": true
+  },
+  "card": {
+   "args": true,
+   "noArgs": false
+  },
+  "cards": {
+   "args": true,
+   "noArgs": false
+  },
+  "catch": {
+   "args": true,
+   "noArgs": false
+  },
+  "cell": {
+   "args": true,
+   "noArgs": false
+  },
+  "change": {
+   "args": true,
+   "noArgs": false
+  },
+  "check": {
+   "args": true,
+   "noArgs": false
+  },
+  "checkerboard": {
+   "args": true,
+   "noArgs": false
+  },
+  "child": {
+   "args": true,
+   "noArgs": false
+  },
+  "children": {
+   "args": true,
+   "noArgs": false
+  },
+  "choose": {
+   "args": true,
+   "noArgs": false
+  },
+  "chord": {
+   "args": true,
+   "noArgs": false
+  },
+  "clear": {
+   "args": false,
+   "noArgs": true
+  },
+  "close": {
+   "args": false,
+   "noArgs": true
+  },
+  "command": {
+   "args": true,
+   "noArgs": false
+  },
+  "commit": {
+   "args": true,
+   "noArgs": false
+  },
+  "compact": {
+   "args": true,
+   "noArgs": false
+  },
+  "cos": {
+   "args": true,
+   "noArgs": false
+  },
+  "create": {
+   "args": false,
+   "noArgs": true
+  },
+  "current": {
+   "args": true,
+   "noArgs": false
+  },
+  "cursor_grab": {
+   "args": false,
+   "noArgs": true
+  },
+  "cursor_pointer": {
+   "args": false,
+   "noArgs": true
+  },
+  "cursor_text": {
+   "args": false,
+   "noArgs": true
+  },
+  "deal": {
+   "args": false,
+   "noArgs": true
+  },
+  "delete": {
+   "args": true,
+   "noArgs": false
+  },
+  "done": {
+   "args": true,
+   "noArgs": true
+  },
+  "down": {
+   "args": true,
+   "noArgs": false
+  },
+  "due": {
+   "args": true,
+   "noArgs": false
+  },
+  "entries": {
+   "args": true,
+   "noArgs": true
+  },
+  "escape": {
+   "args": false,
+   "noArgs": true
+  },
+  "every": {
+   "args": true,
+   "noArgs": false
+  },
+  "exec": {
+   "args": true,
+   "noArgs": false
+  },
+  "explorer": {
+   "args": true,
+   "noArgs": false
+  },
+  "feature": {
+   "args": true,
+   "noArgs": false
+  },
+  "file": {
+   "args": false,
+   "noArgs": true
+  },
+  "fill": {
+   "args": false,
+   "noArgs": true
+  },
+  "filter": {
+   "args": true,
+   "noArgs": false
+  },
+  "find": {
+   "args": true,
+   "noArgs": false
+  },
+  "flex": {
+   "args": false,
+   "noArgs": true
+  },
+  "flex_1": {
+   "args": false,
+   "noArgs": true
+  },
+  "flex_col": {
+   "args": false,
+   "noArgs": true
+  },
+  "flex_none": {
+   "args": false,
+   "noArgs": true
+  },
+  "flex_row": {
+   "args": false,
+   "noArgs": true
+  },
+  "flex_shrink": {
+   "args": true,
+   "noArgs": false
+  },
+  "flex_wrap": {
+   "args": false,
+   "noArgs": true
+  },
+  "floor": {
+   "args": true,
+   "noArgs": false
+  },
+  "focus": {
+   "args": false,
+   "noArgs": true
+  },
+  "focus_handle": {
+   "args": false,
+   "noArgs": true
+  },
+  "font_bold": {
+   "args": false,
+   "noArgs": true
+  },
+  "font_family": {
+   "args": true,
+   "noArgs": false
+  },
+  "font_medium": {
+   "args": false,
+   "noArgs": true
+  },
+  "font_semibold": {
+   "args": false,
+   "noArgs": true
+  },
+  "font_weight": {
+   "args": true,
+   "noArgs": false
+  },
+  "foundation": {
+   "args": true,
+   "noArgs": false
+  },
+  "frame": {
+   "args": true,
+   "noArgs": false
+  },
+  "frames": {
+   "args": true,
+   "noArgs": false
+  },
+  "from": {
+   "args": true,
+   "noArgs": false
+  },
+  "gap": {
+   "args": true,
+   "noArgs": false
+  },
+  "get": {
+   "args": true,
+   "noArgs": false
+  },
+  "glyph": {
+   "args": true,
+   "noArgs": false
+  },
+  "go": {
+   "args": true,
+   "noArgs": false
+  },
+  "grouped": {
+   "args": true,
+   "noArgs": false
+  },
+  "h": {
+   "args": true,
+   "noArgs": false
+  },
+  "h_full": {
+   "args": false,
+   "noArgs": true
+  },
+  "has": {
+   "args": true,
+   "noArgs": false
+  },
+  "heading": {
+   "args": true,
+   "noArgs": false
+  },
+  "hint": {
+   "args": true,
+   "noArgs": false
+  },
+  "hold": {
+   "args": true,
+   "noArgs": false
+  },
+  "hover": {
+   "args": true,
+   "noArgs": false
+  },
+  "id": {
+   "args": true,
+   "noArgs": false
+  },
+  "includes": {
+   "args": true,
+   "noArgs": false
+  },
+  "input": {
+   "args": true,
+   "noArgs": false
+  },
+  "inset_0": {
+   "args": false,
+   "noArgs": true
+  },
+  "item": {
+   "args": true,
+   "noArgs": false
+  },
+  "items": {
+   "args": false,
+   "noArgs": true
+  },
+  "items_center": {
+   "args": false,
+   "noArgs": true
+  },
+  "items_end": {
+   "args": false,
+   "noArgs": true
+  },
+  "items_start": {
+   "args": false,
+   "noArgs": true
+  },
+  "items_stretch": {
+   "args": false,
+   "noArgs": true
+  },
+  "join": {
+   "args": true,
+   "noArgs": false
+  },
+  "justify_between": {
+   "args": false,
+   "noArgs": true
+  },
+  "justify_center": {
+   "args": false,
+   "noArgs": true
+  },
+  "justify_end": {
+   "args": false,
+   "noArgs": true
+  },
+  "key": {
+   "args": true,
+   "noArgs": false
+  },
+  "key_context": {
+   "args": true,
+   "noArgs": false
+  },
+  "keys": {
+   "args": true,
+   "noArgs": false
+  },
+  "layouts": {
+   "args": false,
+   "noArgs": true
+  },
+  "left": {
+   "args": true,
+   "noArgs": false
+  },
+  "line_height": {
+   "args": true,
+   "noArgs": false
+  },
+  "line_to": {
+   "args": true,
+   "noArgs": false
+  },
+  "linear_gradient": {
+   "args": true,
+   "noArgs": false
+  },
+  "load": {
+   "args": true,
+   "noArgs": true
+  },
+  "log": {
+   "args": true,
+   "noArgs": false
+  },
+  "look": {
+   "args": true,
+   "noArgs": false
+  },
+  "loop": {
+   "args": true,
+   "noArgs": false
+  },
+  "machines": {
+   "args": true,
+   "noArgs": false
+  },
+  "map": {
+   "args": true,
+   "noArgs": false
+  },
+  "match": {
+   "args": true,
+   "noArgs": false
+  },
+  "max": {
+   "args": true,
+   "noArgs": false
+  },
+  "max_h": {
+   "args": true,
+   "noArgs": false
+  },
+  "max_w": {
+   "args": true,
+   "noArgs": false
+  },
+  "mb": {
+   "args": true,
+   "noArgs": false
+  },
+  "me": {
+   "args": false,
+   "noArgs": true
+  },
+  "menu": {
+   "args": true,
+   "noArgs": true
+  },
+  "min": {
+   "args": true,
+   "noArgs": false
+  },
+  "min_h": {
+   "args": true,
+   "noArgs": false
+  },
+  "min_w": {
+   "args": true,
+   "noArgs": false
+  },
+  "mode": {
+   "args": true,
+   "noArgs": false
+  },
+  "move": {
+   "args": true,
+   "noArgs": false
+  },
+  "move_to": {
+   "args": true,
+   "noArgs": false
+  },
+  "mr": {
+   "args": true,
+   "noArgs": false
+  },
+  "mt": {
+   "args": true,
+   "noArgs": false
+  },
+  "mx": {
+   "args": true,
+   "noArgs": false
+  },
+  "my": {
+   "args": true,
+   "noArgs": false
+  },
+  "neighbors": {
+   "args": true,
+   "noArgs": false
+  },
+  "new": {
+   "args": true,
+   "noArgs": true
+  },
+  "news": {
+   "args": false,
+   "noArgs": true
+  },
+  "notify": {
+   "args": false,
+   "noArgs": true
+  },
+  "now": {
+   "args": false,
+   "noArgs": true
+  },
+  "ok": {
+   "args": false,
+   "noArgs": true
+  },
+  "on": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_action": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_click": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_drop": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_hover": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_key_down": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_mouse_down": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_mouse_down_out": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_mouse_move": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_mouse_up": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_scroll_wheel": {
+   "args": true,
+   "noArgs": false
+  },
+  "on_size_change": {
+   "args": true,
+   "noArgs": false
+  },
+  "opacity": {
+   "args": true,
+   "noArgs": false
+  },
+  "open": {
+   "args": true,
+   "noArgs": false
+  },
+  "ordered": {
+   "args": false,
+   "noArgs": true
+  },
+  "overflow_hidden": {
+   "args": false,
+   "noArgs": true
+  },
+  "overflow_x_scrollbar": {
+   "args": false,
+   "noArgs": true
+  },
+  "overflow_y_scroll": {
+   "args": false,
+   "noArgs": true
+  },
+  "overflow_y_scrollbar": {
+   "args": false,
+   "noArgs": true
+  },
+  "p": {
+   "args": true,
+   "noArgs": false
+  },
+  "paint_path": {
+   "args": true,
+   "noArgs": false
+  },
+  "panels": {
+   "args": false,
+   "noArgs": true
+  },
+  "para": {
+   "args": true,
+   "noArgs": false
+  },
+  "parse": {
+   "args": true,
+   "noArgs": false
+  },
+  "pb": {
+   "args": true,
+   "noArgs": false
+  },
+  "peek": {
+   "args": true,
+   "noArgs": false
+  },
+  "pick": {
+   "args": true,
+   "noArgs": false
+  },
+  "pile": {
+   "args": true,
+   "noArgs": false
+  },
+  "pl": {
+   "args": true,
+   "noArgs": false
+  },
+  "point": {
+   "args": true,
+   "noArgs": false
+  },
+  "pop": {
+   "args": false,
+   "noArgs": true
+  },
+  "pr": {
+   "args": true,
+   "noArgs": false
+  },
+  "preview": {
+   "args": true,
+   "noArgs": false
+  },
+  "privacy": {
+   "args": true,
+   "noArgs": false
+  },
+  "pt": {
+   "args": true,
+   "noArgs": false
+  },
+  "push": {
+   "args": true,
+   "noArgs": false
+  },
+  "px": {
+   "args": true,
+   "noArgs": false
+  },
+  "py": {
+   "args": true,
+   "noArgs": false
+  },
+  "quick": {
+   "args": true,
+   "noArgs": false
+  },
+  "radio": {
+   "args": true,
+   "noArgs": false
+  },
+  "random": {
+   "args": false,
+   "noArgs": true
+  },
+  "rank": {
+   "args": true,
+   "noArgs": false
+  },
+  "reduce": {
+   "args": true,
+   "noArgs": false
+  },
+  "refresh": {
+   "args": true,
+   "noArgs": true
+  },
+  "relative": {
+   "args": false,
+   "noArgs": true
+  },
+  "release": {
+   "args": false,
+   "noArgs": true
+  },
+  "remove": {
+   "args": false,
+   "noArgs": true
+  },
+  "render": {
+   "args": true,
+   "noArgs": false
+  },
+  "replace": {
+   "args": true,
+   "noArgs": false
+  },
+  "report": {
+   "args": true,
+   "noArgs": false
+  },
+  "request": {
+   "args": true,
+   "noArgs": false
+  },
+  "reset": {
+   "args": false,
+   "noArgs": true
+  },
+  "reveal": {
+   "args": true,
+   "noArgs": false
+  },
+  "reverse": {
+   "args": false,
+   "noArgs": true
+  },
+  "right": {
+   "args": true,
+   "noArgs": false
+  },
+  "round": {
+   "args": true,
+   "noArgs": false
+  },
+  "rounded": {
+   "args": true,
+   "noArgs": false
+  },
+  "rounded_bl": {
+   "args": true,
+   "noArgs": false
+  },
+  "rounded_full": {
+   "args": false,
+   "noArgs": true
+  },
+  "row": {
+   "args": true,
+   "noArgs": false
+  },
+  "rows": {
+   "args": true,
+   "noArgs": true
+  },
+  "save": {
+   "args": true,
+   "noArgs": true
+  },
+  "screen": {
+   "args": true,
+   "noArgs": false
+  },
+  "segment": {
+   "args": true,
+   "noArgs": false
+  },
+  "self_start": {
+   "args": false,
+   "noArgs": true
+  },
+  "send": {
+   "args": true,
+   "noArgs": false
+  },
+  "set": {
+   "args": true,
+   "noArgs": false
+  },
+  "set_selected_range": {
+   "args": true,
+   "noArgs": false
+  },
+  "set_value": {
+   "args": true,
+   "noArgs": false
+  },
+  "shadow_sm": {
+   "args": false,
+   "noArgs": true
+  },
+  "shift": {
+   "args": false,
+   "noArgs": true
+  },
+  "shots_row": {
+   "args": true,
+   "noArgs": false
+  },
+  "show": {
+   "args": true,
+   "noArgs": false
+  },
+  "shown": {
+   "args": false,
+   "noArgs": true
+  },
+  "shutdown": {
+   "args": false,
+   "noArgs": true
+  },
+  "sin": {
+   "args": true,
+   "noArgs": false
+  },
+  "since": {
+   "args": true,
+   "noArgs": false
+  },
+  "size": {
+   "args": true,
+   "noArgs": false
+  },
+  "size_full": {
+   "args": false,
+   "noArgs": true
+  },
+  "slice": {
+   "args": true,
+   "noArgs": false
+  },
+  "some": {
+   "args": true,
+   "noArgs": false
+  },
+  "sort": {
+   "args": true,
+   "noArgs": true
+  },
+  "space": {
+   "args": false,
+   "noArgs": true
+  },
+  "spawn": {
+   "args": true,
+   "noArgs": false
+  },
+  "spin": {
+   "args": true,
+   "noArgs": false
+  },
+  "splice": {
+   "args": true,
+   "noArgs": false
+  },
+  "split": {
+   "args": true,
+   "noArgs": false
+  },
+  "start": {
+   "args": true,
+   "noArgs": true
+  },
+  "status": {
+   "args": true,
+   "noArgs": true
+  },
+  "stepper": {
+   "args": true,
+   "noArgs": false
+  },
+  "stock": {
+   "args": true,
+   "noArgs": false
+  },
+  "stop": {
+   "args": false,
+   "noArgs": true
+  },
+  "stop_propagation": {
+   "args": false,
+   "noArgs": true
+  },
+  "stringify": {
+   "args": true,
+   "noArgs": false
+  },
+  "submit": {
+   "args": false,
+   "noArgs": true
+  },
+  "target": {
+   "args": true,
+   "noArgs": false
+  },
+  "tasks": {
+   "args": false,
+   "noArgs": true
+  },
+  "term": {
+   "args": false,
+   "noArgs": true
+  },
+  "test": {
+   "args": true,
+   "noArgs": false
+  },
+  "text_center": {
+   "args": false,
+   "noArgs": true
+  },
+  "text_color": {
+   "args": true,
+   "noArgs": false
+  },
+  "text_right": {
+   "args": false,
+   "noArgs": true
+  },
+  "text_size": {
+   "args": true,
+   "noArgs": false
+  },
+  "title": {
+   "args": true,
+   "noArgs": false
+  },
+  "toggle": {
+   "args": true,
+   "noArgs": false
+  },
+  "tooltip": {
+   "args": true,
+   "noArgs": false
+  },
+  "top": {
+   "args": true,
+   "noArgs": false
+  },
+  "track": {
+   "args": true,
+   "noArgs": false
+  },
+  "track_focus": {
+   "args": true,
+   "noArgs": false
+  },
+  "tray": {
+   "args": true,
+   "noArgs": false
+  },
+  "tree": {
+   "args": true,
+   "noArgs": false
+  },
+  "trim": {
+   "args": false,
+   "noArgs": true
+  },
+  "truncate": {
+   "args": false,
+   "noArgs": true
+  },
+  "underline": {
+   "args": false,
+   "noArgs": true
+  },
+  "updates": {
+   "args": true,
+   "noArgs": false
+  },
+  "value": {
+   "args": false,
+   "noArgs": true
+  },
+  "values": {
+   "args": true,
+   "noArgs": false
+  },
+  "vertical": {
+   "args": true,
+   "noArgs": false
+  },
+  "victory": {
+   "args": true,
+   "noArgs": false
+  },
+  "viewport_from_layout": {
+   "args": false,
+   "noArgs": true
+  },
+  "w": {
+   "args": true,
+   "noArgs": false
+  },
+  "w_full": {
+   "args": false,
+   "noArgs": true
+  },
+  "watch": {
+   "args": true,
+   "noArgs": false
+  },
+  "when": {
+   "args": true,
+   "noArgs": false
+  },
+  "whitespace_nowrap": {
+   "args": false,
+   "noArgs": true
+  },
+  "work": {
+   "args": true,
+   "noArgs": false
+  },
+  "write_to_clipboard": {
+   "args": true,
+   "noArgs": false
+  },
+  "yes": {
+   "args": false,
+   "noArgs": true
+  }
+ }
+}

@@ -6,7 +6,7 @@ A Herdr app mod that shows FirstMate's Bearings picture (Captain's Call, Underwa
 
 ## Requirements
 
-- Herdr app 0.1.10 (target), on the same Linux host as FirstMate.
+- Herdr app 0.1.10 with herdr-core 0.1.15, or app 0.1.11 with core 0.1.16, on the same Linux host as FirstMate. Both pairs are qualification targets; 0.1.11/0.1.16 fix mod-related window freezes and core–holder terminal freezes, so prefer them once qualified.
 - A FirstMate checkout that ships `bin/fm-bearings-snapshot.sh` with `--json` and `--fields` (upstream `355a307` or later), plus `env`, Bash and jq.
 
 ## Install

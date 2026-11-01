@@ -3,25 +3,36 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { checkSource, stripStringsAndComments } from "./gpui-api-check.mjs";
 
-const surface = JSON.parse(readFileSync(new URL("./fixtures/gpui-surface.json", import.meta.url), "utf8"));
+const load = (name) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
 const mainSrc = readFileSync(new URL("../mods/firstmate-fleet/main.js", import.meta.url), "utf8");
 
-test("the surface was extracted from the pinned Herdr app revision", () => {
-  assert.equal(surface.source.repo, "herdrdev/herdr-app");
-  assert.equal(surface.source.revision, "8180cbe6c947519e8015dd7c35801a93e08a7d66");
-  assert.ok(surface.paramStyles.includes("text_size"));
-  assert.ok(surface.behaviors.includes("on_key_down"));
-  assert.ok(surface.jsMethods.includes("when"));
-  assert.ok(surface.source.shippedFiles > 20);
-});
+// Every Herdr app version the panel targets, with the revision its surface came from.
+const TARGETS = [
+  { version: "0.1.10", file: "gpui-surface.json", revision: "8180cbe6c947519e8015dd7c35801a93e08a7d66" },
+  { version: "0.1.11", file: "gpui-surface-0.1.11.json", revision: "e12fd31866f33cb613922d0b33ea506e6f23ce3c" },
+];
+const surface = load(TARGETS[0].file);
 
-test("main.js calls only methods, imports and theme colours that exist", () => {
-  const { problems, calls } = checkSource(mainSrc, surface);
-  assert.deepEqual(problems, []);
-  assert.ok(calls.size > 30, `checked ${calls.size} GPUI method names`);
-  // Guard against the check silently reading nothing.
-  assert.ok(checkSource(mainSrc.replace('import { exec,', 'import { execute,'), surface).problems.includes("herdr has no export execute"));
-});
+for (const target of TARGETS) {
+  const s = load(target.file);
+
+  test(`app ${target.version}: the surface was extracted from its pinned revision`, () => {
+    assert.equal(s.source.repo, "herdrdev/herdr-app");
+    assert.equal(s.source.revision, target.revision);
+    assert.ok(s.paramStyles.includes("text_size"));
+    assert.ok(s.behaviors.includes("on_key_down"));
+    assert.ok(s.jsMethods.includes("when"));
+    assert.ok(s.source.shippedFiles > 20);
+  });
+
+  test(`app ${target.version}: main.js calls only methods, imports and theme colours that exist`, () => {
+    const { problems, calls } = checkSource(mainSrc, s);
+    assert.deepEqual(problems, []);
+    assert.ok(calls.size > 30, `checked ${calls.size} GPUI method names`);
+    // Guard against the check silently reading nothing.
+    assert.ok(checkSource(mainSrc.replace("import { exec,", "import { execute,"), s).problems.includes("herdr has no export execute"));
+  });
+}
 
 test("only main.js imports herdr or gpui modules", () => {
   for (const file of ["config.js", "decode.js", "project.js", "controller.js", "host.js", "view-model.js"]) {

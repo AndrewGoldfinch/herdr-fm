@@ -2,7 +2,7 @@
 // Observational only. The single command it runs is FirstMate's Bearings collector
 // (see host.js); it never sends, steers, answers, merges or stops anything.
 //
-// UNVERIFIED: written against the Herdr app 0.1.10 mod guide and the shipped mods,
+// UNVERIFIED: written against the Herdr app 0.1.10 and 0.1.11 mod guide and the shipped mods,
 // without a Herdr binary. `herdr-app check` and the live checks in Task 3 are pending.
 
 import { View, div } from "gpui-kit";

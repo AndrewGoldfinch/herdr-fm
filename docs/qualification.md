@@ -14,9 +14,10 @@
 | Collection latency (P17) | bounds read (below) | 25 tasks 4.2 s, 50 tasks 7.5 s | pending with real endpoints |
 | Network attempts with `forgeReads: false`, no secondmates | — | 0 in every run | pending with remote homes |
 | Collector write set under `data/` and `state/` | cache dir only, by source | not measured | pending |
-| Native APIs used by `main.js` | names and arity checked statically (below) | `herdr-app check` pending |
-| First-dock and uninstall behaviour | `mod.json` docking rule read | pending |
-| Fork contains `355a307` | not checked | pending |
+| Native APIs used by `main.js` | names and arity checked statically against 0.1.10 and 0.1.11 (below) | — | `herdr-app check` pending on both pairs |
+| Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on both pairs |
+| First-dock and uninstall behaviour | `mod.json` docking rule read | — | pending |
+| Fork contains `355a307` | not checked | — | pending |
 
 ## Pins
 
@@ -24,7 +25,9 @@
 | --- | --- |
 | FirstMate | `355a30710d6e545fe57f720896ed440ee5d99a9a` |
 | Herdr app | `8180cbe6c947519e8015dd7c35801a93e08a7d66` (mod API identical to `v0.1.10`) |
+| Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`; same mod surface, plain QuickJS interpreter) |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (`0.1.15`) |
+| Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`0.1.16`; core–holder reconnect, `shell = [...]`) |
 
 ## Producer field mapping (source)
 
@@ -75,7 +78,7 @@ grep -ohE '\$\{?FM_[A-Z_]*(OVERRIDE|_NOW[A-Z_]*|CACHE_DIR)\b' \
 
 ## Static API check (source)
 
-`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json`. `scripts/extract-gpui-surface.mjs` extracted that surface from herdr-app at the pinned revision; the sources it reads are identical at herdr-app `e3cdccc`. Result: no problems. Evidence per name:
+`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json` (app 0.1.10 API) and `tests/fixtures/gpui-surface-0.1.11.json` (`v0.1.11`). `scripts/extract-gpui-surface.mjs` extracted both. The two surfaces are identical except that a shipped 0.1.11 mod calls a method named `hint`, which `main.js` does not use. Result on both: no problems. Evidence per name:
 
 | Evidence | Names in `main.js` |
 | --- | --- |
@@ -88,6 +91,12 @@ grep -ohE '\$\{?FM_[A-Z_]*(OVERRIDE|_NOW[A-Z_]*|CACHE_DIR)\b' \
 It proves names and argument presence, not argument types, which element a method applies to, or layout. `herdr-app check` is still required.
 
 `selectable` exists only on `TextView` (Markdown/HTML). Making artifact references selectable that way means escaping task text so it renders literally and no link becomes clickable; deferred.
+
+## Herdr 0.1.11 and core 0.1.16 (source)
+
+- App 0.1.11 (`9af0ecc`) runs mods on the plain QuickJS interpreter instead of the JIT. The engine comment says the JIT's upkeep ran on the main thread and grew with every loaded mod copy, because module generations are never freed. Expect memory to grow with hot reloads on both versions (P23) and CPU stalls only on 0.1.10. Re-measure P14 decode time in the app, not only in Node.
+- Core 0.1.16 (`a5ed044`, `cfbb01d`, `7487a93`, `b52679c`, issue #47) reconnects to its holder instead of freezing terminals. The collector's `hc read` and `hc get` calls for hc tasks run inside each collection, so P22 breaks that link mid-collection.
+- Core 0.1.16 adds `shell = [...]` for new terminals and keep recovery. That affects the hc adapter's typed launch line (hc spec I13), not the panel, whose collector runs through `env` and `bash` explicitly.
 
 ## Native APIs to verify on the host
 
