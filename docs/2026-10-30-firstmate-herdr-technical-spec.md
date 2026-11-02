@@ -228,7 +228,7 @@ Accept only the exact schema `fm-bearings.v1`. Require:
 
 `unhealthy_endpoints` appears only when non-empty, so its absence means none were reported. Unknown additive fields are ignored. An unsupported schema or invalid required container invalidates the collection; retain a previously valid model with an incompatibility banner. A canonical `fm-fleet-snapshot.v1` document is an unsupported schema, not a degraded Bearings model.
 
-**Home check.** Every `paths[].status` value must lie under `<configured home>/state/`; the canonical snapshot reports status logs as `$STATE/<id>.status`. A mismatch is a configuration error: never show another home's data under the requested label. With no main-home tasks only the label check is possible; show “home verified by label only”.
+**Home check.** Every `paths[].status` value must lie under `<configured home>/state/`; the canonical snapshot reports status logs as `$STATE/<id>.status`. A mismatch is a configuration error: never show another home's data under the requested label. With no main-home tasks only the label check is possible; show “label only” beside the home label in the header.
 
 Validate rows independently. Malformed rows are omitted with counts and reasons; valid rows are preserved. Bearings writes `"-"` for absent `blocked_by`, `artifact` and `target`; decode it to null for search and details and display “none”. Phase 0 must capture the exact field shapes used below as sanitized fixtures before coding the decoder.
 
@@ -297,7 +297,7 @@ Stable keys use a JSON-encoded tuple, not an ambiguous string concatenation. Dup
 | `decisions_open[]` `{id,key,verb,summary,owner}` | Captain's Call | Live captain holds only, as Bearings selects them (`hold_bucket == "live"`, main and secondmate homes). The panel adds nothing from status logs; `hints.pending_decision` is not an input |
 | `in_flight[]` `{id,kind,state,repo,name,doing}` | Underway | Raw state word; secondmate children keep their `<mate>/<id>`; no inferred completion |
 | `landed[]` `{id,what,artifact,owner}` | Recently Landed | Bearings order (balanced across homes, newest first within each); no finish time is invented |
-| `gates[]` `{id,title,blocked_by,reason,owner,filed}` | Charted Next | Ids in parentheses, such as `(main-inventory)` and `(return-catchup)`, are action-free warnings: badge them “needs repair” and leave them out of queued counts, as the board does |
+| `gates[]` `{id,title,blocked_by,reason,owner,filed}` | Charted Next | Ids in parentheses, such as `(main-inventory)` and `(return-catchup)`, are action-free warnings: badge them “needs repair” and keep them out of the queued figure, as the board does. The tab count is still every row the tab lists; the note splits queued from needs-repair |
 | `secondmates[]` | Secondmate summaries | Provenance, freshness, age, contradiction and reason shown as given |
 | `unhealthy_endpoints[]` | Endpoint warnings | `exists: null` and `agent: "not_checked"` are unknown, not false |
 | `endpoints[]`, `paths[]` | Row details for main-home tasks | A path is not proof that an artifact is currently readable |
@@ -323,17 +323,23 @@ Use one mod named `firstmate-fleet`, initially docked on the right with a propos
 
 Use FirstMate's section names. Do not use Herdr's agent-status words (“Needs you”, “Done”, “Working”, “Idle”) for FirstMate sections. The Agents list beside the panel uses them for terminal status, and the two can legitimately disagree.
 
-- Header: home label and how it was verified, collection age, refresh state, Refresh action and search.
+- Header: home label (with “label only” when only the label could be checked), collection age, refresh state, Refresh action and search.
 - Captain's Call: live captain holds with owner and summary, counted as captain holds.
 - Underway: id, name, state, repo and what it is doing, with endpoint evidence in details. Unknown or missing endpoints remain visible.
 - Recently Landed: in Bearings order, with owner and artifact.
-- Charted Next: queued and gated work with blocker, reason and filed date; warnings badged “needs repair”.
+- Charted Next: queued and gated work with filed date, warnings badged “needs repair”. Each row says whom it waits for: Bearings' reason when it gives one, otherwise “waits for <blocker>”.
 - Secondmates and endpoint warnings: provenance, freshness and reasons as given.
 - Details: full title, exact state, endpoint evidence, artifact references, identity caveat and any partial-data warnings.
 
+Presentation rules, adapted from the panel principles in deepseek-ai/dsh-superagent-prototype (`docs/005-panel.md`):
+
+- **Honest counts.** A tab's count equals the number of rows it lists. Splits such as queued versus needs-repair go in the tab's note, and Bearings' own bounds stay in the disclosures (“decisions_open showing 20 of 25”), not in an inflated count.
+- **Whom it waits for.** A row that waits says on what: Captain's Call rows wait for the captain by definition; Charted Next rows show Bearings' reason or their blocker.
+- **Quiet by default.** A healthy state takes no space. Banners are for conditions the captain can act on or must know (setup, failure, away, stale, skew, limited data); a verification detail such as “label only” sits in the header.
+
 Tabs or compact sections may be selected by the implementer, provided keyboard navigation and every section remain available. Use text labels with colour; colour alone cannot convey unknown, blocked or stale state. Preserve full values in details when rows truncate long text.
 
-Render 50 rows per page after filtering, with total matches and page controls. Search matches literal case-insensitive id, title and repo text; it never evaluates regexes. Make search/selection deterministic for fixture tests. Support keyboard focus, Enter to select and Escape to leave details using the actual bundled GPUI APIs. App 0.1.12 adds `"focusable": true` in `mod.json`, which lets `pane.go` move the keyboard onto a mod. Adopt it only after confirming that 0.1.10 and 0.1.11 load a `mod.json` containing that key.
+Render 50 rows per page after filtering, with total matches and page controls. Search matches literal case-insensitive id, title, repo and artifact references (PR URLs, listed report paths), so “which task owns PR 42” is a search; it never evaluates regexes. Make search/selection deterministic for fixture tests. Support keyboard focus, Enter to select and Escape to leave details using the actual bundled GPUI APIs. App 0.1.12 adds `"focusable": true` in `mod.json`, which lets `pane.go` move the keyboard onto a mod. Adopt it only after confirming that 0.1.10 and 0.1.11 load a `mod.json` containing that key.
 
 MVP artifact references are selectable text. Opening a browser/editor is deferred unless the implementation verifies a safe native API and covers it in the same review. Do not shell-execute paths or URLs from task data. No automatic report reading or arbitrary embedded markup rendering is required.
 

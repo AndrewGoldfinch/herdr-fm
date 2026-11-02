@@ -41,6 +41,14 @@ test("search is literal and case-insensitive over id, title and repo", () => {
   assert.equal(projectSection(m, "running tests", "underway", 0).totalMatches, 0, "detail text is not searched");
 });
 
+test("search also finds a row by its artifact references, such as a PR URL or report path", () => {
+  const m = model("normal");
+  assert.deepEqual(projectSection(m, "pull/42", "underway", 0).rows.map((r) => r.id), ["fix-login"]);
+  assert.deepEqual(projectSection(m, "PULL/41", "landed", 0).rows.map((r) => r.id), ["bump-deps"]);
+  assert.deepEqual(projectSection(m, "scout-cache/report.md", "underway", 0).rows.map((r) => r.id), ["scout-cache"]);
+  assert.equal(projectSection(m, "pull/9999", "underway", 0).totalMatches, 0);
+});
+
 test("search treats regex syntax literally", () => {
   const m = model("hostile");
   assert.equal(projectSection(m, ".*", "underway", 0).totalMatches, 1);

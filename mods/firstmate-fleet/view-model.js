@@ -49,7 +49,6 @@ function banners(st) {
   if (st.stale) out.push({ tone: "warning", text: `Snapshot is stale. Collected ${formatAge(st.receiptAgeMs)} ago; generated ${formatAge(st.producerAgeMs)} ago.`, detail: [] });
   const limited = limitedLines(m);
   if (limited.length) out.push({ tone: "info", text: "Some fleet information is limited.", detail: limited });
-  if (m.homeCheck === "label-only") out.push({ tone: "info", text: "Home verified by label only.", detail: ["No task status paths were available to check against the configured home."] });
   return out;
 }
 
@@ -57,10 +56,14 @@ function tabs(model) {
   const c = sectionCounts(model);
   const n = (k) => (model ? c[k] : null);
   return TABS.map((section) => {
+    // A count is the length of the list the tab opens; splits go in the note.
     let count = section === "secondmates" ? (model ? model.secondmates.length : null) : n(section);
     let note = null;
     if (section === "captain_call" && model) note = plural(c.captain_call, "captain hold");
-    if (section === "charted_next" && model && c.charted_warnings) note = `${plural(c.charted_warnings, "warning")} ${c.charted_warnings === 1 ? "needs" : "need"} repair`;
+    if (section === "charted_next" && model) {
+      count = c.charted_next + c.charted_warnings;
+      if (c.charted_warnings) note = `${c.charted_next} queued · ${c.charted_warnings} ${c.charted_warnings === 1 ? "needs" : "need"} repair`;
+    }
     return { section, label: LABELS[section], count, note };
   });
 }
@@ -78,8 +81,9 @@ function rowMeta(row) {
   const parts = [];
   if (row.owner && row.owner !== "(main)") parts.push(row.owner);
   if (row.repo) parts.push(row.repo);
-  if (row.section === "charted_next" && row.blockedBy) parts.push(`blocked by ${row.blockedBy}`);
+  // Say whom a gate waits for: Bearings' reason when it gives one, else its blocker.
   if (row.detail) parts.push(row.detail);
+  else if (row.section === "charted_next" && row.blockedBy) parts.push(`waits for ${row.blockedBy}`);
   return parts.join(" · ");
 }
 
@@ -159,6 +163,8 @@ export function buildView(st, ui) {
     header: {
       home: model ? model.homeLabel : null,
       homeCheck: model ? model.homeCheck : null,
+      // Quiet by default: label-only verification is a header note, not a banner.
+      homeNote: model && model.homeCheck === "label-only" ? "label only" : null,
       age: model ? formatAge(st.receiptAgeMs) : null,
       refreshing: st.refreshing,
       stale: st.stale,

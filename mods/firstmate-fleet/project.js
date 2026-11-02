@@ -2,13 +2,16 @@
 
 import { PAGE_SIZE } from "./config.js";
 
+// Artifact references count, so "which task owns PR 42?" is a search; recorded paths that
+// Bearings does not list as reports do not.
 const matches = (row, needle) =>
   row.id.toLowerCase().includes(needle) ||
   row.title.toLowerCase().includes(needle) ||
-  (row.repo !== null && row.repo.toLowerCase().includes(needle));
+  (row.repo !== null && row.repo.toLowerCase().includes(needle)) ||
+  row.artifacts.some((a) => a.value.toLowerCase().includes(needle));
 
 /**
- * Literal, case-insensitive search over id, title and repo; never a regex.
+ * Literal, case-insensitive search over id, title, repo and artifact references; never a regex.
  * @returns {{rows: object[], totalMatches: number, page: number, pageCount: number, pageSize: number, disclosures: object[]}}
  */
 export function projectSection(model, query, section, page) {

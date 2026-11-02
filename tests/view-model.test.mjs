@@ -40,16 +40,33 @@ test("section counts, with captain calls counted as captain holds and warnings a
   const t = Object.fromEntries(v.tabs.map((x) => [x.section, x]));
   assert.equal(t.captain_call.count, 2);
   assert.equal(t.captain_call.note, "2 captain holds");
-  assert.equal(t.charted_next.count, 3);
-  assert.equal(t.charted_next.note, "2 warnings need repair");
+  assert.equal(t.charted_next.count, 5, "the count is the rows the tab lists");
+  assert.equal(t.charted_next.note, "3 queued · 2 need repair");
   assert.equal(t.underway.count, 1);
+});
+
+test("honest counts: every tab's count equals the rows it lists", () => {
+  for (const name of ["normal", "holds", "partial", "duplicate", "cached-secondmate", "empty"]) {
+    const m = model(name);
+    const v = buildView(state({ model: m }), UI);
+    for (const tab of v.tabs) {
+      const listed = buildView(state({ model: m }), { ...UI, section: tab.section });
+      const rows = tab.section === "secondmates" ? listed.secondmates.length : listed.pager.totalMatches;
+      assert.equal(tab.count, rows, `${name} ${tab.section}`);
+    }
+  }
 });
 
 test("warning gates are badged 'needs repair'", () => {
   const v = buildView(state({ model: model("holds") }), { ...UI, section: "charted_next" });
   assert.deepEqual(v.rows[0].badges, [{ text: "needs repair", tone: "warning" }]);
   assert.deepEqual(v.rows[2].badges, []);
-  assert.equal(v.rows[2].meta, "blocked by ask-api · blocked by ask-api: needs schema");
+  assert.equal(v.rows[2].meta, "blocked by ask-api: needs schema", "Bearings' reason, not repeated");
+});
+
+test("a Charted Next row says whom it waits for when Bearings gives no reason", () => {
+  const v = buildView(state(), { ...UI, section: "charted_next" });
+  assert.equal(v.rows[0].meta, "waits for fix-login");
 });
 
 test("loading, unavailable, setup, away and incompatible states without a model", () => {
@@ -75,9 +92,12 @@ test("with a retained model: failure, away, stale, skew and limited data are all
   assert.equal(texts(away)[0], "FirstMate is in away mode; run the return in FirstMate. Showing the last snapshot.");
 });
 
-test("home verified by label only is disclosed", () => {
-  assert.ok(texts(buildView(state({ model: model("empty") }), UI)).includes("Home verified by label only."));
-  assert.equal(texts(buildView(state(), UI)).includes("Home verified by label only."), false);
+test("quiet by default: label-only home verification sits in the header, not a banner", () => {
+  const v = buildView(state({ model: model("empty") }), UI);
+  assert.deepEqual(texts(v), []);
+  assert.equal(v.header.homeCheck, "label-only");
+  assert.equal(v.header.homeNote, "label only");
+  assert.equal(buildView(state(), UI).header.homeNote, null);
 });
 
 test("P01: an empty model says so with a disclosure count, never 'all clear'", () => {
@@ -141,6 +161,6 @@ test("cursor clamps to the page and search reports no matches plainly", () => {
 
 test("header carries home, age and refresh state", () => {
   const v = buildView(state({ refreshing: true }), UI);
-  assert.deepEqual(v.header, { home: "captain/firstmate", homeCheck: "paths", age: "10s", refreshing: true, stale: false, prs: "not requested (pass --include-prs for live GitHub discovery)" });
+  assert.deepEqual(v.header, { home: "captain/firstmate", homeCheck: "paths", homeNote: null, age: "10s", refreshing: true, stale: false, prs: "not requested (pass --include-prs for live GitHub discovery)" });
   assert.equal(v.notRequested, 4);
 });

@@ -160,7 +160,7 @@ export default class FirstmateFleet extends View {
       .border_b(1)
       .border_color(t.border)
       .child(div().flex_none().font_semibold().child("FirstMate fleet"))
-      .child(div().flex_1().min_w(0).truncate().text_color(t.dim).child(h.home ?? ""))
+      .child(div().flex_1().min_w(0).truncate().text_color(t.dim).child(h.homeNote ? `${h.home ?? ""} · ${h.homeNote}` : h.home ?? ""))
       .child(div().flex_none().text_size(11).text_color(h.stale ? t.done : t.dim).child(h.refreshing ? "Refreshing…" : h.age ? `${h.age} ago` : ""))
       .child(
         div()
