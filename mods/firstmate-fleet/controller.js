@@ -49,6 +49,31 @@ function sanitize(text) {
 
 const firstLine = (text) => sanitize(text).split("\n")[0] ?? "";
 
+// Hidden files are ignored, except the ones fm-afk-return.sh reads to decide away mode.
+const AWAY_FILES = new Set([".afk", ".afk-contract", ".afk-return-catchup"]);
+const CACHE_DIR = "secondmate-summary-cache";
+
+/**
+ * Whether one watched path can change the fleet. `kind` is "state" or "data" when the path
+ * came from that watch, else null. Herdr canonicalizes a watched root, so a home reached
+ * through a symlink reports paths outside the configured prefix; those are judged by their
+ * own segments, which can only over-count (an extra collection, still rate-limited).
+ */
+function changes(path, home, kind) {
+  if (path.startsWith(`${home}/`)) {
+    const segs = path.slice(home.length + 1).split("/");
+    if (segs[0] === "state" && segs[1] === CACHE_DIR) return false;
+    if (segs.length === 2 && segs[0] === "state" && AWAY_FILES.has(segs[1])) return true;
+    return !segs.some((seg) => seg.startsWith("."));
+  }
+  if (kind === null) return false;
+  const segs = path.split("/");
+  const name = segs[segs.length - 1];
+  if (segs.includes(CACHE_DIR)) return false;
+  if (name.startsWith(".")) return kind === "state" && AWAY_FILES.has(name);
+  return true;
+}
+
 /**
  * @param {{host: {collect: Function, readConfig: Function},
  *          clock: {nowMs: () => number, wallTimeMs: () => number, monotonic?: boolean},
@@ -317,18 +342,16 @@ export function createController({ host, clock, parse = parseConfig, decode = de
       return { changed: true, pending: attempt("manual") };
     },
 
-    /** Paths from watchFolder. Returns whether any of them can change the fleet. */
-    notifyChange(paths) {
+    /**
+     * Paths from watchFolder, and the folder that watch was asked for (`<home>/state` or
+     * `<home>/data`). Returns whether any of them can change the fleet.
+     */
+    notifyChange(paths, root) {
       if (s.disposed || !s.config) return false;
-      const home = `${s.config.firstmateHome}/`;
-      const cache = `${s.config.firstmateHome}/state/secondmate-summary-cache/`;
-      // Hidden files are ignored, except the ones fm-afk-return.sh reads to decide away mode.
-      const away = new Set([".afk", ".afk-contract", ".afk-return-catchup"].map((n) => `${home}state/${n}`));
-      const relevant = (paths ?? []).some(
-        (p) =>
-          typeof p === "string" &&
-          (away.has(p) || (p.startsWith(home) && !p.startsWith(cache) && !p.slice(home.length).split("/").some((seg) => seg.startsWith(".")))),
-      );
+      const home = s.config.firstmateHome;
+      const kind = root === `${home}/state` ? "state" : root === `${home}/data` ? "data" : null;
+      if (root !== undefined && kind === null) return false;
+      const relevant = (paths ?? []).some((p) => typeof p === "string" && changes(p, home, kind));
       if (!relevant) return false;
       if (s.inFlight) s.dirty = true;
       else if (s.pendingChangeMs === null) s.pendingChangeMs = now();

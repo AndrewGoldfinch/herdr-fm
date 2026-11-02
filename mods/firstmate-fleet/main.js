@@ -76,7 +76,7 @@ export default class FirstmateFleet extends View {
           while (this.watchHome === home && this.watching === watchSet) {
             const paths = await watchFolder(dir);
             if (this.watchHome !== home || this.watching !== watchSet) break;
-            this.controller.notifyChange(paths);
+            this.controller.notifyChange(paths, dir);
           }
         } catch {
           // Missing folder or watcher error: forget it so the next collection retries.

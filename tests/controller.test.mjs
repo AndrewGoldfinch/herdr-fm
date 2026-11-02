@@ -178,6 +178,37 @@ test("the away guard's hidden files still count as changes", async () => {
   assert.equal(env.c.notifyChange([`${HOME}/data/.afk`]), false, "only under state/");
 });
 
+test("watch paths under a canonicalized (symlink-resolved) home still count", async () => {
+  // Herdr canonicalizes the watched root, so a home reached through a symlink reports
+  // paths under its real location, not under the configured path.
+  const env = setup();
+  await env.settle(ok(), await started(env));
+  const real = "/srv/real-firstmate";
+  assert.equal(env.c.notifyChange([`${real}/state/fix-login.meta`], `${HOME}/state`), true);
+  assert.equal(env.c.notifyChange([`${real}/data/backlog.md`], `${HOME}/data`), true);
+  assert.equal(env.c.notifyChange([`${real}/state/.afk`], `${HOME}/state`), true, "away files count under state/");
+  assert.equal(env.c.notifyChange([`${real}/data/.afk`], `${HOME}/data`), false, "but not under data/");
+  assert.equal(env.c.notifyChange([`${real}/state/.home-summary-refresh.lock`], `${HOME}/state`), false);
+  assert.equal(env.c.notifyChange([`${real}/state/secondmate-summary-cache/mate-b.json`], `${HOME}/state`), false);
+  assert.equal(env.c.notifyChange([`${real}/state/secondmate-summary-cache/.summary.x`], `${HOME}/state`), false);
+});
+
+test("a batch naming the watch root itself means refresh everything", async () => {
+  // App 0.1.12 bounds pending paths; an overflowing batch is reported as the root.
+  const env = setup();
+  await env.settle(ok(), await started(env));
+  assert.equal(env.c.notifyChange([`${HOME}/state`], `${HOME}/state`), true);
+  assert.equal(env.c.notifyChange([`/srv/real-firstmate/data`], `${HOME}/data`), true);
+});
+
+test("paths from a watch that is not this home's are ignored", async () => {
+  const env = setup();
+  await env.settle(ok(), await started(env));
+  assert.equal(env.c.notifyChange([`/home/other/state/x.meta`], `/home/other/state`), false);
+  assert.equal(env.c.notifyChange([`${HOME}/state/x.meta`], `${HOME}/config`), false, "only state/ and data/ are watched");
+  assert.equal(env.c.notifyChange([`/elsewhere/state/x.status`]), false, "no root and outside the home: unknown origin");
+});
+
 test("P18: thirty minutes of cache churn costs only fallback collections", async () => {
   const env = setup();
   await env.settle(ok(), await started(env));

@@ -10,6 +10,7 @@ const mainSrc = readFileSync(new URL("../mods/firstmate-fleet/main.js", import.m
 const TARGETS = [
   { version: "0.1.10", file: "gpui-surface.json", revision: "8180cbe6c947519e8015dd7c35801a93e08a7d66" },
   { version: "0.1.11", file: "gpui-surface-0.1.11.json", revision: "e12fd31866f33cb613922d0b33ea506e6f23ce3c" },
+  { version: "0.1.12", file: "gpui-surface-0.1.12.json", revision: "4aa3460749947e7771aa39a8a2cec58d46649926" },
 ];
 const surface = load(TARGETS[0].file);
 
