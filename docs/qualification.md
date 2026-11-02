@@ -14,8 +14,10 @@
 | Collection latency (P17) | bounds read (below) | 25 tasks 4.2 s, 50 tasks 7.5 s | pending with real endpoints |
 | Network attempts with `forgeReads: false`, no secondmates | — | 0 in every run | pending with remote homes |
 | Collector write set under `data/` and `state/` | cache dir only, by source | not measured | pending |
-| Native APIs used by `main.js` | names and arity checked statically against 0.1.10 and 0.1.11 (below) | — | `herdr-app check` pending on both pairs |
-| Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on both pairs |
+| Native APIs used by `main.js` | names and arity checked statically against 0.1.10, 0.1.11 and 0.1.12 (below) | — | `herdr-app check` pending on every pair |
+| Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on every pair |
+| App termination, core saves, read side effects, watch semantics (P24–P27) | 0.1.12 and 0.1.17 fixes read (below) | — | pending on every pair |
+| Watch paths from a symlinked home | canonicalization found in `src/files.rs` on all three app versions; fixed in the controller with tests | — | pending (P27) |
 | First-dock and uninstall behaviour | `mod.json` docking rule read | — | pending |
 | Fork contains `355a307` | not checked | — | pending |
 
@@ -28,6 +30,8 @@
 | Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`; same mod surface, plain QuickJS interpreter) |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (`0.1.15`) |
 | Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`0.1.16`; core–holder reconnect, `shell = [...]`) |
+| Herdr app | `4aa3460749947e7771aa39a8a2cec58d46649926` (`v0.1.12`; same mod surface; Linux watches skip git-ignored directories) |
+| Herdr core | `ce87721557176f6cddaac1c7aefbf76929923263` (`0.1.17`; saves outside the state lock, prompt reads, macOS launchd core) |
 
 ## Producer field mapping (source)
 
@@ -78,7 +82,7 @@ grep -ohE '\$\{?FM_[A-Z_]*(OVERRIDE|_NOW[A-Z_]*|CACHE_DIR)\b' \
 
 ## Static API check (source)
 
-`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json` (app 0.1.10 API) and `tests/fixtures/gpui-surface-0.1.11.json` (`v0.1.11`). `scripts/extract-gpui-surface.mjs` extracted both. The two surfaces are identical except that a shipped 0.1.11 mod calls a method named `hint`, which `main.js` does not use. Result on both: no problems. Evidence per name:
+`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json` (app 0.1.10 API), `tests/fixtures/gpui-surface-0.1.11.json` (`v0.1.11`) and `tests/fixtures/gpui-surface-0.1.12.json` (`v0.1.12`). `scripts/extract-gpui-surface.mjs` extracted all three. They are identical for everything `main.js` uses; shipped mods add the method names `hint` (0.1.11) and `keyboard`, `rebuilt`, `reconnect`, `shared` (0.1.12). Result on all three: no problems. Evidence per name:
 
 | Evidence | Names in `main.js` |
 | --- | --- |
@@ -97,6 +101,14 @@ It proves names and argument presence, not argument types, which element a metho
 - App 0.1.11 (`9af0ecc`) runs mods on the plain QuickJS interpreter instead of the JIT. The engine comment says the JIT's upkeep ran on the main thread and grew with every loaded mod copy, because module generations are never freed. Expect memory to grow with hot reloads on both versions (P23) and CPU stalls only on 0.1.10. Re-measure P14 decode time in the app, not only in Node.
 - Core 0.1.16 (`a5ed044`, `cfbb01d`, `7487a93`, `b52679c`, issue #47) reconnects to its holder instead of freezing terminals. The collector's `hc read` and `hc get` calls for hc tasks run inside each collection, so P22 breaks that link mid-collection.
 - Core 0.1.16 adds `shell = [...]` for new terminals and keep recovery. That affects the hc adapter's typed launch line (hc spec I13), not the panel, whose collector runs through `env` and `bash` explicitly.
+
+## Herdr 0.1.12 and core 0.1.17 (source)
+
+- **Reads (#60, `277f6a6`).** Core 0.1.17 answers a read of a full-screen agent at a prompt at once and never scrolls the prompt. On 0.1.15 and 0.1.16 that read took about 25 seconds, so crew-state's 10-second bound would report such hc tasks as `unknown` and slow each collection. The synthetic P17 numbers above used tmux stand-ins and do not show this; measure P17 with hc workers on each pair.
+- **Linux folder watches (`b66d1db`).** App 0.1.12 skips git-ignored directories, rejects trees over 4,096 non-ignored directories, and reports the watch root when pending paths overflow. FirstMate's `.gitignore` lists `state/`, `data/`, `config/` and `projects/`. The panel watches `state/` and `data/` as roots, so their direct files should still report; confirm in P27.
+- **Watch paths are canonical** in `next_change` on every app version reviewed. A home reached through a symlink used to lose every change event to the panel's prefix filter; `notifyChange` now takes the watched folder and judges canonical paths by their own segments (`tests/controller.test.mjs`).
+- **App termination.** Core 0.1.17 starts through launchd on macOS so quitting the app no longer stops agents; agents started earlier pick it up on their next start. The panel's own behaviour on quit is `close(cx)` with a 250 ms budget; an `exec` already started keeps running.
+- **Saves.** Core 0.1.17 persists registry snapshots outside the state lock instead of freezing every terminal.
 
 ## Native APIs to verify on the host
 

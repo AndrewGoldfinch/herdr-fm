@@ -29,6 +29,8 @@ No live validation has been performed for this revision.
 
 **Revision 3.1 — October 31, 2026:** Tracks FirstMate PR #8011 (worker-side OSC 7501 reporting) as a possible integration enhancement, and adds model-pin readback (I11) and state-preservation regressions (I12) to the hc qualification matrix. The observational snapshot design is unchanged; see “Tracked upstream proposals”.
 
+**Revision 3.3 — November 2, 2026:** Adds app 0.1.12 with core 0.1.17 as a third qualification pair, with P24–P27 for app termination, core saves under load, observation side effects and watch semantics, and hc rows I15–I19. States explicitly that worker survival is not conversation recovery or exactly-once external action. The static API check covers all three app revisions.
+
 **Revision 3.2 — November 1, 2026:** Adds app 0.1.11 with core 0.1.16 as a second qualification pair, with scenarios for repeated polling, slow snapshots, disconnects and hot reloads (P20–P23), and the matching hc rows (I13, I14). The static API check covers both app revisions.
 
 **Revision 2** adopted upstream `hc` instead of building a backend. That work continues in the hc qualification document.
@@ -85,7 +87,7 @@ None of this warrants replacing the observational snapshot design yet. An OSC 75
 
 Launching, messaging, interrupting, retrying, killing, answering or merging **from the panel**; native worker focus/peek controls; joining rows to live Herdr terminals; remote command execution beyond the collector's own reads (section 4); homes beyond Bearings' registered secondmates; automatic notifications; full report-content reading; fleet-ledger times; Pi Durable experiment visualization.
 
-The prototype does not assert durable task resumption or exactly-once external delivery. Those remain separate execution-provider questions.
+The prototype does not assert durable task resumption or exactly-once external delivery. Those remain separate execution-provider questions. Worker processes surviving app termination, core saves or reconnects shows only that a process kept running. It does not show that an agent's conversation or context was recovered, or that an external action (a push, a pull request, a message) happened exactly once. No panel label, count or row may imply either.
 
 ## 2. Evidence and compatibility baseline
 
@@ -98,15 +100,23 @@ Source review established the following, not live interoperability:
 | Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`) | Same mod API; mods run on the plain QuickJS interpreter |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (`v0.1.15`) | Terminal labels, for the phase 1b join only |
 | Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`v0.1.16`) | Same CLI and protocol; core–holder reconnect; configurable default shell |
+| Herdr app | `4aa3460749947e7771aa39a8a2cec58d46649926` (`v0.1.12`) | Same mod API; Linux folder watches skip git-ignored directories; focusable mods |
+| Herdr core | `ce87721557176f6cddaac1c7aefbf76929923263` (`v0.1.17`) | Saves outside the state lock; prompt reads answer at once; macOS core runs apart from the app |
 
 Revision 2 also pinned FirstMate `df81d8166aab83f328aa3a05516cbe21882d5e23`. It is an ancestor of `355a307`, three commits earlier, and `fm-fleet-snapshot.sh`, `fm-fleet-view.sh`, `fm-bearings-snapshot.sh` and `fm-crew-state.sh` are identical between the two. `355a307` was upstream `main` on October 30, 2026.
 
 The app pin is two commits before the `v0.1.10` tag. Between them `defaults/herdr.d.ts` is unchanged and `defaults/AGENTS.md` gains one sentence about pointer drags, so the mod API reviewed here is the 0.1.10 API. Core `d028423` is the 0.1.15 release commit.
 
-Qualify two target pairs on the target host: app 0.1.10 with core 0.1.15, and app **0.1.11** with core **0.1.16**. Record binary versions, build revisions and checksums. Results are per pair; a pass on one is not a claim about the other. Prefer 0.1.11/0.1.16 for rollout once both pass, for the two fixes below.
+Qualify three target pairs on the target host: app 0.1.10 with core 0.1.15 (the baseline), app **0.1.11** with core **0.1.16**, and app **0.1.12** with core **0.1.17**. Record binary versions, build revisions and checksums. Results are per pair; a pass on one is not a claim about another. Prefer the newest pair that passes for rollout.
 
 - **App 0.1.11** fixes the window freezing or spiking the CPU for seconds while mods run. The fix (`9af0ecc`) moves mods from the QuickJS JIT to the plain interpreter. Its engine comment explains that the JIT's upkeep ran on the main thread and grew with every loaded mod copy, because module generations are never freed. Repeated polling and hot reloads (P20, P23) are where this panel would hit that. The interpreter also means decode timings measured under Node (P14) must be re-measured in the app. The mod API the panel uses is unchanged: `herdr.d.ts` changes only in documentation, and the static check (`tests/gpui-api.test.mjs`) passes `main.js` against surfaces extracted from both app revisions.
 - **Core 0.1.16** fixes terminals freezing when the core falls behind or loses contact with its holder. The core now reconnects, and programs keep running (#47). The CLI and protocol are unchanged apart from the version. The collector reads hc task terminals (`hc read`, `hc get`) on every collection, so a core–holder disconnect lands inside a collection (P22).
+- **App 0.1.12 with core 0.1.17.** On macOS the core now starts through launchd, so closing, quitting or updating the app no longer stops agents (core `44cb360`, herdr-app#294). Agents already running pick this up only the next time they start. On Linux the core has its own systemd path (`platform/systemd.rs`), but whether it outlives the app in every install is not established here; qualify app termination there too (P24).
+- **Core 0.1.17 saves** registry snapshots outside the state lock (`7a54c29`), so terminals no longer freeze while it saves. Collections read hc terminals during those saves (P25).
+- **Core 0.1.17 prompt reads** (`277f6a6`, #60): reading a full-screen agent waiting at a prompt now answers at once and never scrolls the prompt. On 0.1.15 and 0.1.16 such a read took about 25 seconds, beyond the collector's 10-second per-task bound, so those tasks would read as `unknown` and each collection would slow by that bound. It may also have scrolled the worker's prompt, a side effect of observation (P26, and P17 per pair).
+- **Core 0.1.17 launch delays**: terminals on Linux without polkit start at once instead of after 25 seconds (#62), and a template on another machine that takes over 30 seconds to get ready no longer fails (#63). The panel launches nothing; these belong to the hc qualification and to the phase 1b remote mode.
+- **App 0.1.12 folder watches on Linux** skip git-ignored directories, reject a tree over 4,096 non-ignored directories, and bound pending paths, reporting the watch root when they overflow. FirstMate's own `.gitignore` ignores `state/` and `data/`, and a home is often the checkout. The panel watches those folders as roots, so files directly inside still report; nested ones may not (P27). A rejected watch falls back to the timer.
+- Herdr canonicalizes every watched root, on all three app versions, so a home reached through a symlink reports paths under its real location. The controller accepts those paths from this home's own watches (P27).
 
 The `AndrewGoldfinch/firstmate` fork (`experiment/pi-durable-supervision`) was not reinspected for this revision. Phase 0 must check whether the selected checkout contains `355a307` or an equivalent Bearings contract, without modifying the held Pi Durable experiment.
 
@@ -175,7 +185,7 @@ The list comes from the variables the reviewed collectors read. Phase 0 re-deriv
 
 Bearings publishes only a two-segment `home` label, not the full path, so section 5 adds a path check.
 
-Initial qualification target: Herdr app and FirstMate on the same Linux desktop host. WSLg is a separate qualification target; a Windows app talking to FirstMate in WSL is not claimed supported by this local invocation. A later remote mode can use `exec(..., {on: machine})` after path/environment qualification.
+Initial qualification target: Herdr app and FirstMate on the same Linux desktop host. WSLg is a separate qualification target; a Windows app talking to FirstMate in WSL is not claimed supported by this local invocation. A later remote mode can use `exec(..., {on: machine})` after path/environment qualification. That mode must budget for remote readiness delays (core 0.1.17 #63 fixed templates taking over 30 seconds), because a remote collection still has Herdr's 30-second `exec` limit.
 
 ### What one collection does
 
@@ -323,7 +333,7 @@ Use FirstMate's section names. Do not use Herdr's agent-status words (“Needs y
 
 Tabs or compact sections may be selected by the implementer, provided keyboard navigation and every section remain available. Use text labels with colour; colour alone cannot convey unknown, blocked or stale state. Preserve full values in details when rows truncate long text.
 
-Render 50 rows per page after filtering, with total matches and page controls. Search matches literal case-insensitive id, title and repo text; it never evaluates regexes. Make search/selection deterministic for fixture tests. Support keyboard focus, Enter to select and Escape to leave details using the actual bundled GPUI APIs.
+Render 50 rows per page after filtering, with total matches and page controls. Search matches literal case-insensitive id, title and repo text; it never evaluates regexes. Make search/selection deterministic for fixture tests. Support keyboard focus, Enter to select and Escape to leave details using the actual bundled GPUI APIs. App 0.1.12 adds `"focusable": true` in `mod.json`, which lets `pane.go` move the keyboard onto a mod. Adopt it only after confirming that 0.1.10 and 0.1.11 load a `mod.json` containing that key.
 
 MVP artifact references are selectable text. Opening a browser/editor is deferred unless the implementation verifies a safe native API and covers it in the same review. Do not shell-execute paths or URLs from task data. No automatic report reading or arbitrary embedded markup rendering is required.
 
@@ -398,8 +408,12 @@ Live integration uses harmless shell workers and isolated state. Record changes 
 | P21 | Slow snapshots: a stub FirstMate root whose `bin/fm-bearings-snapshot.sh` sleeps 5, 20, 29 and 35 s, then prints a captured fixture | UI responsive and “Refreshing…” shown while waiting; the 35 s case fails at the host limit with the last model kept as historical; no backlog of queued collections afterwards |
 | P22 | Disconnects: break the core–holder link during a collection that reads hc terminals, then stop and restart the core | The collection completes or fails within the host limit; never an empty fleet; the next collection recovers; no worker stopped; task state unchanged (hc I12) |
 | P23 | Repeated hot reloads: 100 saves of a visible mod file, 20 of them during an in-flight collection | P12's rules hold every time; UI stays responsive; memory growth per reload recorded; CPU does not grow with reload count |
+| P24 | App termination during a collection: close the window, quit, update, and `kill -9` the app | `close(cx)` disposes within its 250 ms; workers keep running and task state is unchanged (hc I15); the relaunched panel starts fresh and collects once; no second panel instance keeps polling |
+| P25 | Core state saves under load: 50 busy hc workers producing output while the core saves | Collection latency and `herdr-app status` stalls recorded per pair; no terminal freeze on 0.1.17; never an empty fleet |
+| P26 | Observation side effects: a full-screen agent waiting at a prompt, read by 20 collections | Per pair: per-read latency, and whether the agent's screen and scroll position changed (`herdr-app shot` before and after). Any change is recorded against the collector's observational claim on that pair |
+| P27 | Watch semantics: home as the FirstMate checkout (git-ignoring `state/` and `data/`), home outside any repository, home through a symlink, and a `state/` tree over 4,096 directories | Changes to `state/<id>.status`, `state/<id>.meta`, `state/.afk` and `data/backlog.md` start a collection within the debounce and minimum interval; otherwise the fallback cadence is observed and recorded |
 
-For P20–P23, measure from outside the app so a stalled window cannot hide its own stall. For example, time a `herdr-app status` reply once a second and sample the app's CPU and resident memory with `ps`; Task 0 confirms the window's main thread serves that reply. Run them on both target pairs with the same home, fixture and settings. The 0.1.10 result is the baseline the 0.1.11 freeze fix is measured against, not a failure to be waived.
+For P20–P27, measure from outside the app so a stalled window cannot hide its own stall. For example, time a `herdr-app status` reply once a second and sample the app's CPU and resident memory with `ps`; Task 0 confirms the window's main thread serves that reply. Run them on every target pair with the same home, fixture and settings. Older pairs' results are the baseline later fixes are measured against, not failures to be waived.
 
 ### Five benefit measures
 
@@ -421,7 +435,7 @@ Measure collection latency (P17) separately from panel overhead. The collector w
 
 Panel acceptance requires all of the following:
 
-- P01–P23 pass with recorded evidence on each target pair claimed; critical state/identity tests cannot be waived by usability gains. P20–P23 are also run on the other pair, so a failure there is recorded against its version rather than hidden.
+- P01–P27 pass with recorded evidence on each target pair claimed; critical state/identity tests cannot be waived by usability gains. P20–P27 are also run on the pairs not claimed, so a failure there is recorded against its version rather than hidden.
 - `node --test tests/*.test.mjs` passes in the proposed companion repo.
 - `herdr-app check <installed-mod-path>` exits zero on the qualified host; this render-once check supplements live asynchronous testing.
 - A 30-minute live session on each claimed pair demonstrates failure/recovery, away mode, manual refresh, change-driven refresh, close and hot reload without task mutation or duplicate loops, with collections per hour recorded.
@@ -436,7 +450,7 @@ Roll out manually to one home. Roll back by removing the mod; no task-state migr
 | Phase | Deliverable | Entry / exit condition |
 | --- | --- | --- |
 | 0 — qualification | Bearings fixtures, collector latency and write set, override list, native mod shell, docking/uninstall record | Actual checkout contract, host APIs and costs recorded |
-| 1 — prototype | Observational Bearings panel | P01–P23 and panel acceptance gates pass on each claimed target pair |
+| 1 — prototype | Observational Bearings panel | P01–P27 and panel acceptance gates pass on each claimed target pair |
 | 1b — usability/remote | Read-only Herdr terminal join, fleet-ledger merge times, artifact opening, qualified remote collection, optional multi-home views | Separate tests per item; nothing here authorizes an action |
 | 2 — controlled panel actions | Focus/peek through Herdr's native commands, then decision answers through the Bearings board's intake | Fresh `spawn_gen` and label verification at action time; separate design review |
 | 3 — experiment view | Baseline/durable result display | Versioned result contract; outcome append and external delivery metrics separate |
@@ -541,7 +555,7 @@ Proposed repository files and responsibilities:
 
 - [ ] Build the 12 matched operator scenarios, their stored `/bearings` digests and explicit answer keys; include command use/action counting rules and alternated view order.
 - [ ] Add an evaluation check that both arms receive the same fixture digest and `forgeReads` setting, and record any supplementary baseline CLI tools. Exclude mismatched trials instead of comparing them.
-- [ ] Run P01–P23, the 30-minute live session, P14 timing and P17 latency measurements on each target pair (P14 in the app's interpreter as well as Node). Record authoritative-state diffs separately from allowed cache updates.
+- [ ] Run P01–P27, the 30-minute live session, P14 timing and P17 latency measurements on each target pair (P14 in the app's interpreter as well as Node). Record authoritative-state diffs separately from allowed cache updates.
 - [ ] Conduct the paired pilot, calculate the five benefit measures and report actual passes/misses without converting proposed targets into results.
 - [ ] Package the mod with install/rollback instructions, `RECIPE.md`, `preview.png` and the network disclosure. Commit measured results; retain experimental labels for unqualified combinations.
 
