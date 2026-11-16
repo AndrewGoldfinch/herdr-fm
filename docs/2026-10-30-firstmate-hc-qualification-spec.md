@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. The execution method is chosen at implementation time. Checkboxes track proposed work, not completed work.
 
-**Goal:** Establish whether FirstMate's experimental upstream `hc` execution backend runs real FirstMate tasks correctly with Herdr app 0.1.10 / herdr-core 0.1.15 (the baseline), app 0.1.11 / core 0.1.16 and app 0.1.12 / core 0.1.17, and fix demonstrated gaps narrowly.
+**Goal:** Establish whether FirstMate's experimental upstream `hc` execution backend runs real FirstMate tasks correctly with Herdr app 0.1.10 / herdr-core 0.1.15 (the baseline), app 0.1.11 / core 0.1.16, app 0.1.12 / core 0.1.17 and app 0.1.16 / core 0.1.21, and fix demonstrated gaps narrowly.
 
 **Relationship to the fleet panel:** This work was split out of the [fleet panel specification](2026-10-30-firstmate-herdr-technical-spec.md) in its revision 3. The panel consumes no interface from it and renders whatever backend FirstMate's Bearings model reports. A failure here blocks claims of an integrated hc setup; it does not block the panel.
 
@@ -23,18 +23,21 @@ Source review established the following, not live interoperability:
 | Component | Reviewed revision | Relevant contract |
 | --- | --- | --- |
 | FirstMate upstream | `355a30710d6e545fe57f720896ed440ee5d99a9a` | Experimental `bin/backends/hc.sh`, `docs/hc-backend.md` and the verification record; adoption baseline |
+| FirstMate upstream | `427056c4181c41074ad24f051f79919330df0fa5` (`main`, November 12) | hc auto-selection in app-projected terminals (#8060); submission through `hc send --wait` and an `hc` ≥ 0.1.14 gate (#8037); OSC 7501 bridge (#8011, `350cb69`) |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (the 0.1.15 release commit) | `hc` CLI, including `run --no-parent --outlive-parent --no-notify --keep`; terminal RPCs, status and event semantics |
 | Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`v0.1.16`) | Same CLI and protocol; core–holder reconnect (#47); `shell = [...]` in `config.toml` for new terminals and keep recovery |
 | Herdr app | `8180cbe6c947519e8015dd7c35801a93e08a7d66` (two commits before `v0.1.10`) | Display of the `default` session; `herdr.space` / `herdr.tab` label adoption |
 | Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`) | Same; mods run on the QuickJS interpreter instead of the JIT |
 | Herdr core | `ce87721557176f6cddaac1c7aefbf76929923263` (`v0.1.17`) | macOS core through launchd, apart from the app; saves outside the state lock; prompt reads; launch delays; `hc send` rejects non-UTF-8 arguments |
 | Herdr app | `4aa3460749947e7771aa39a8a2cec58d46649926` (`v0.1.12`) | Agents run apart from the app on macOS; shared seen and pinned state across clients |
+| Herdr core | `1b0393f80c35b1dae34f37934d33d0144a8fc8d7` (`v0.1.21`) | Same protocol methods (fields added); detached programs outlive their terminal (0.1.19); draft-held messages (0.1.20); `restore_screen` (0.1.21) |
+| Herdr app | `034f8b85f7e6bb71f8ff55cb4a80c548b2578c0f` (`v0.1.16`) | Nothing the adapter uses changed |
 
 The old `herdr` adapter is not interchangeable with `hc`: it uses old CLI commands, pane targets and pane events. The new core has terminal addresses, separate app presentation, program-reported status and a different event protocol. Do not alias `herdr` to `hc` or silently redirect the old backend.
 
 The opening contract of the adapter in `AndrewGoldfinch/firstmate`, branch `experiment/pi-durable-supervision`, still describes the older `herdr` session/workspace/tab/pane interface. That inspection does not establish whether `355a307` is present in Andrew's branch. Check ancestry and dependencies before adoption, without modifying the held Pi Durable experiment implicitly.
 
-Qualify three target pairs: Herdr app **0.1.10** with herdr-core **0.1.15** (the baseline), app **0.1.11** with core **0.1.16**, and app **0.1.12** with core **0.1.17**. Record actual binary versions, build revisions and checksums, and record every matrix row against its pair. Changelogs confirm these releases, not their compatibility with this project. App 0.1.10 fixes `herdr-app check` crashes involving scrolling lists and layout animations; core 0.1.15 fixes restoration of kept terminals and spaces after shutdown or reboot. Restored shells do not establish task resumption.
+Qualify four target pairs: Herdr app **0.1.10** with herdr-core **0.1.15** (the baseline), app **0.1.11** with core **0.1.16**, app **0.1.12** with core **0.1.17**, and app **0.1.16** with core **0.1.21**. Record actual binary versions, build revisions and checksums, and record every matrix row against its pair. Changelogs confirm these releases, not their compatibility with this project. App 0.1.10 fixes `herdr-app check` crashes involving scrolling lists and layout animations; core 0.1.15 fixes restoration of kept terminals and spaces after shutdown or reboot. Restored shells do not establish task resumption.
 
 Core 0.1.16 fixes terminals freezing when the core falls behind or loses contact with its holder. The core reconnects instead and programs keep running (`a5ed044`, `cfbb01d`, `7487a93`, `b52679c`). It also changes two behaviours the adapter depends on:
 
@@ -51,13 +54,21 @@ Core 0.1.17 changes behaviours the adapter and FirstMate supervision depend on:
 - **Launch delays.** Linux machines without polkit start terminals at once instead of after 25 seconds (`8df027b`, #62). A template on another machine that needs over 30 seconds to get ready no longer fails, and its agent can still report back (`ca4a78b`, #63) (I18).
 - `hc send` with arguments that are not valid text now says so instead of crashing (#50).
 
-FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011) (“feat: report worker status through OSC 7501”, open on October 31, 2026, branched from `355a307`) is tracked as an enhancement in section 6, not adopted. It touches none of the files the adapter contract or the fleet panel reads.
+Core 0.1.18 to 0.1.21 change more of the same ground:
+
+- **Detached programs outlive their terminal (0.1.19, #136).** On Linux and macOS, a program a worker starts with `nohup`, `setsid` or as a daemon keeps running when the terminal closes, and can keep its port. FirstMate's teardown kills, removes and checks the terminal; it does not look for such programs (I20). Terminals opened before 0.1.19 keep the old behaviour until reopened.
+- **Messages wait behind an unfinished draft (0.1.20, #64).** Agent messages and parent notes wait for the user to send or clear a draft in the target terminal, for up to `draft_wait` seconds (default 60). FirstMate steers with `hc send --wait` (#8037), so a steer into a worker with a draft can be held (I21).
+- **macOS core apart from the app after login and reboot (0.1.20).** Before, the core often ran inside the app then, and force-quitting Herdr ended its terminals. Terminals opened before 0.1.20 keep the old behaviour until closed (I15).
+- **Restored screens (0.1.21, #260).** With `restore_screen = true`, a kept terminal shows its program's last screen above the new shell after a reboot. A dead agent's screen can then look live to anything that reads the pane (I22).
+- Also: every terminal gets `TERM=xterm-256color` (0.1.20); `hc wait` reports an agent's exit (0.1.21); after a core crash apps see each agent's current status (0.1.21); remote Linux machines warn when logout would stop their programs (0.1.21, relevant to I18).
+
+FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011) (“feat: report worker status through OSC 7501”) merged into FirstMate `main` as `350cb69` and is on by default. Section 6 holds its probes, which are required for any checkout containing it.
 
 Upstream verification primarily uses core 0.1.13 on macOS, plus a 0.1.14 socket-precedence probe. It reports lifecycle smoke tests, a stand-in scout's spawn/send/peek/teardown, and bare Claude Code/Codex liveness. Real-harness spawn, ship spawn, real composer submit confirmation, native status under FirstMate launch and app grouping remain explicitly unverified. Pi/OpenCode were not installed in that live guard. These are upstream-reported results, not tests run for this project.
 
 ## 3. Existing adapter contract to preserve
 
-- Explicit selection through FirstMate's backend configuration or explicit launch option; inherited `HC_TERMINAL_ID` must not select hc.
+- Selection: explicitly through FirstMate's backend configuration or launch option, or, since FirstMate #8060, automatically when FirstMate's own terminal carries a non-empty `herdr.space` label in its core's record (the app projected it), recorded as `backend_detect=app-terminal`. Bare `HC_*` markers such as an inherited `HC_TERMINAL_ID` must still never select hc, and contradictory surface markers keep the earlier verdict.
 - One terminal per task, with Treehouse continuing to own worktrees.
 - Creation uses `--no-parent --outlive-parent --no-notify`, giving workers lifetimes independent of the terminal running FirstMate.
 - Metadata records `backend=hc`, `window=<session>:<address>`, `hc_session` and `hc_terminal`.
@@ -87,7 +98,7 @@ Use harmless synthetic repositories and bounded prompts. Existing agent authenti
 | I02 | Real task through FirstMate | Spawn in an isolated worktree, process recognized, bounded prompt produces expected artifact; repeat scout and ship paths before claiming both |
 | I03 | App visibility and grouping | Task appears in the disposable default-session app; observed space/tab mapping and actual terminal identity recorded |
 | I04 | Steering, inspection and teardown | One follow-up submitted once, correct captured output/state, task removed, sentinel PID/terminal unchanged |
-| I05 | Selection and session isolation | Inherited HC markers do not select backend; conflicting HC_SOCKET/HC_SESSION cannot redirect recorded-task operations |
+| I05 | Selection and session isolation | Bare HC markers do not select the backend; FirstMate in an app-projected terminal auto-selects hc and records `backend_detect=app-terminal`; a live app window does not select hc for an unlabeled process; conflicting HC_SOCKET/HC_SESSION cannot redirect recorded-task operations |
 | I06 | Ownership and replacement | Same task IDs in different homes, mismatched labels and stale/replaced targets refuse misdirected input/termination; disclose any same-label replacement gap |
 | I07 | Real composers and status | Separate results for submit confirmation, wrapper liveness and native status for Claude Code, Codex, Pi and OpenCode |
 | I08 | Parent loss and core restart | Expected independent lifetime on parent exit; crash/restart state is honest, no duplicate launch or false resumed-agent claim |
@@ -102,6 +113,9 @@ Use harmless synthetic repositories and bounded prompts. Existing agent authenti
 | I17 | Read latency and side effects | A full-screen agent waiting at a prompt, read by FirstMate capture and crew-state 20 times. Per pair: per-read latency against crew-state's 10-second bound, the resulting state word, and whether the prompt scrolled or the screen changed |
 | I18 | Launch delays | Spawn on Linux with and without polkit; measure terminal start time against `fm-spawn.sh`'s readiness waits and record any spawn that FirstMate gives up on. Remote hc launch is not supported by the adapter today: record it as UNSUPPORTED, and if it is added, require readiness above 30 seconds (#63) to succeed |
 | I19 | No repeated external action after survival or relaunch | Interrupt a worker by app termination, core restart and `--relaunch` while it is about to push, open a pull request or post. Afterwards count pushes, pull requests and posts against a sandbox remote: more than one for the same intent fails the row. Record whether the worker or FirstMate checked existing state before acting again |
+| I20 | Detached programs after teardown (core 0.1.19) | A worker starts a detached server (`nohup`, `setsid`) on a known port, then FirstMate tears the task down. Record whether the process and port survive, and whether FirstMate reports them; teardown claiming a clean finish while the server runs fails the row |
+| I21 | Steering into a draft (core 0.1.20) | Type an unsent draft into a worker's composer, then steer it through FirstMate. Record how long the message is held, whether `hc send --wait` reports it as submitted, delayed or failed, whether FirstMate's submit confirmation agrees, and that the message arrives once |
+| I22 | Restored screens (core 0.1.21) | With `restore_screen = true`, reboot with a kept worker terminal whose agent did not survive. FirstMate's crew state, busy reads and liveness must not report the restored screen as a live agent, and the panel must not show it as working |
 
 For I07 classify each dimension as PASS, FAIL, NOT RUN or UNSUPPORTED, recording exact versions. Missing native status is displayed as unknown by any consumer and blocks claims of native-status support. Missing installation/authentication is NOT RUN, not UNSUPPORTED.
 
@@ -118,21 +132,19 @@ For I12, diff the files themselves, not their summaries, and record the method. 
 | Phase | Deliverable | Entry / exit condition |
 | --- | --- | --- |
 | H1 — first integration milestone | One real FirstMate task launched, visible in Herdr, steered, inspected and terminated without affecting a sentinel task | I01–I04 pass for one installed real harness on one target pair (app 0.1.10 / core 0.1.15 or app 0.1.11 / core 0.1.16), recorded against that pair |
-| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I19 run on each target pair; every advertised supported combination passes its required tests |
+| H2 — qualification and hardening | Reused upstream hc backend, documented harness matrix and narrowly scoped fixes | I01–I22 run on each target pair; every advertised supported combination passes its required tests |
 
-H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I19 safety tests and per-harness results, per target pair. Never describe I15 or I19 results as recovery or exactly-once delivery. Do not claim all four harnesses from a stand-in or bare-process liveness test. Do not claim a harness honours model pins without its I11 row, or that any restart path preserves task state without I12, or reconnect behaviour without I14 on that pair.
+H1 can run alongside the panel's fixture and UI work. Broader support claims require the relevant I05–I22 safety tests and per-harness results, per target pair. Never describe I15 or I19 results as recovery or exactly-once delivery. Do not claim all four harnesses from a stand-in or bare-process liveness test. Do not claim a harness honours model pins without its I11 row, or that any restart path preserves task state without I12, or reconnect behaviour without I14 on that pair.
 
 ### Tracked enhancement: worker-side OSC 7501 reporting (FirstMate #8011)
 
 PR #8011 adds `bin/fm-osc7501.sh`, armed by `fm-spawn.sh` inside each launch, which writes OSC 7501 root records (`app=firstmate-<harness>`, `title=fm-<task>`) to the worker's own terminal. It maps an open `needs-decision` or held status to `blocked` (`kind=question`), `blocked` to `blocked` (`kind=permission` or `auth`), busy activity to `working`, `failed` to `error` and `done` to `done`. It is on by default per home (`config/osc7501-status`), stands down for harnesses that report natively (Claude Code ≥ 2.1.295, Pi ≥ 1.1.0 per the PR), and skips `backend=herdr` and `t3code`. The PR calls it Stage 2 of a staged herdr-core/app plan, with core/app integration as Stage 3.
 
-Why it is tracked rather than adopted:
-
-- It is open. The automated review at the time of reading still listed two P1 issues: the capability probe can consume typed input on unknown terminals, and on Rex the bridge's own `working` record can keep a finished worker busy.
+Status: merged as `350cb69` and on by default (`config/osc7501-status`). When it was open, its automated review listed two P1 issues: the capability probe could consume typed input on unknown terminals, and on Rex the bridge's own `working` record could keep a finished worker busy. O3 and O4 test exactly those.
 - It would answer I07's “native status under real FirstMate launches” for non-native harnesses, but with FirstMate-derived status, not the harness's own. Rows must record which reporter produced the status.
 - It changes no file the adapter contract or the fleet panel reads.
 
-If it merges, add these conditional probes before relying on it, classified like I07:
+Run these probes for any checkout containing `350cb69`, classified like I07:
 
 | ID | Probe | Required evidence |
 | --- | --- | --- |
@@ -154,7 +166,7 @@ Event-driven supervision remains optional future work. If introduced, honor init
 
 **Files:** `docs/hc-qualification.md`, `eval/hc-matrix.csv`, `eval/hc-scenarios.md`; any actual adapter fixes belong in the isolated FirstMate checkout, not the panel mod.
 
-**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I19 on each target pair.
+**Consumes:** the panel's Task 0 host/checkout record when available, otherwise an equivalent record made here, and the upstream hc implementation. **Produces:** a real-worker milestone result, versions and evidence for I01–I22 on each target pair.
 
 - [ ] Confirm the selected checkout contains commit `355a30710d6e545fe57f720896ed440ee5d99a9a` or an inspected equivalent and its dependencies; record the actual checkout SHA.
 - [ ] Run from that checkout: `bash tests/fm-backend-hc.test.sh`, `bash tests/fm-backend-hc-smoke.test.sh`, and `bash tests/fm-backend-hc-liveness-live-e2e.test.sh`. Require the documented completion markers and inspect skipped-harness output; exit zero alone is insufficient.
@@ -165,6 +177,7 @@ Event-driven supervision remains optional future work. If introduced, honor init
 - [ ] Run I13 and I14 in a private core on core 0.1.16, and again on 0.1.15 to record the difference.
 - [ ] Run I15–I18 on every target pair, recording each worker's start version, service manager, latencies and state words.
 - [ ] Run I19 against a sandbox remote and repository only; record counts per intent, never credentials or real repositories.
+- [ ] Run I20–I22 on core 0.1.21 and on the earlier pairs, recording per row which core version opened each terminal.
 - [ ] If FirstMate #8011 has merged into the selected checkout, run O1–O5 and record which reporter produced each status; otherwise record the PR as NOT RUN.
 - [ ] If a probe fails, add a focused regression test in FirstMate before modifying its adapter. Preserve existing selection/ownership safeguards and rerun affected upstream tests.
 - [ ] Commit the qualification report independently of panel code. A failed milestone leaves the hc integration explicitly experimental.
@@ -173,7 +186,7 @@ Event-driven supervision remains optional future work. If introduced, honor init
 
 Reviewed October 30, 2026. Source pins are review baselines, not a claim that later releases are compatible. The changelog links follow upstream; qualification must record immutable revisions and binary checksums.
 
-- [FirstMate PR #8011: worker status through OSC 7501](https://github.com/kunchenguid/firstmate/pull/8011) (tracked, open)
+- [FirstMate PR #8011: worker status through OSC 7501](https://github.com/kunchenguid/firstmate/pull/8011) (merged as `350cb69`)
 - [OSC 7501 Program Status Protocol proposal](https://control-codes.page/proposals/osc-7501/) (revision 0.4, as cited by the PR)
 - [Upstream hc implementation commit](https://github.com/kunchenguid/firstmate/commit/355a30710d6e545fe57f720896ed440ee5d99a9a)
 - [hc backend operator contract](https://github.com/kunchenguid/firstmate/blob/355a30710d6e545fe57f720896ed440ee5d99a9a/docs/hc-backend.md)

@@ -1,6 +1,6 @@
 # Qualification record (Task 0)
 
-**Status: partial.** Items marked *source* were established by reading upstream code at the pinned revisions. Items marked *synthetic* ran FirstMate's real collector at `355a307` against throwaway homes with `scripts/capture-fixtures.sh` (no live harnesses, fake tmux, network tools stubbed). Nothing has run against a live FirstMate home or a Herdr app.
+**Status: partial.** Items marked *source* were established by reading upstream code at the pinned revisions. Items marked *synthetic* ran FirstMate's real collector at `355a307` and again at `427056c` against throwaway homes with `scripts/capture-fixtures.sh` (no live harnesses, fake tmux, network tools stubbed). Nothing has run against a live FirstMate home or a Herdr app.
 
 | Item | Source | Synthetic | Live |
 | --- | --- | --- | --- |
@@ -8,16 +8,18 @@
 | Collector honors `FM_HOME`; `home` is the last two path segments | done | confirmed | pending |
 | `paths[].status` is `$STATE/<id>.status` | done | confirmed | pending |
 | Override scrub list | done (below) | — | re-derive per checkout |
-| Fixtures | hand-written | `tests/fixtures/captured/` decodes with no issues | capture from a real home |
+| Fixtures | hand-written | `tests/fixtures/captured/` (from `427056c`) decodes with no issues | capture from a real home |
 | Not-requested `omitted[]` pairs | read | confirmed, exactly four | — |
 | Away window exits 3 with `fm-afk-return:` | read | confirmed | pending |
-| Collection latency (P17) | bounds read (below) | 25 tasks 4.2 s, 50 tasks 7.5 s | pending with real endpoints |
+| Collection latency (P17) | bounds read (below) | `355a307`: 25 tasks 4.2 s, 50 tasks 7.5 s; `427056c`: 2.7 s and 4.4 s | pending with real endpoints |
 | Network attempts with `forgeReads: false`, no secondmates | — | 0 in every run | pending with remote homes |
 | Collector write set under `data/` and `state/` | cache dir only, by source | not measured | pending |
-| Native APIs used by `main.js` | names and arity checked statically against 0.1.10, 0.1.11 and 0.1.12 (below) | — | `herdr-app check` pending on every pair |
+| Native APIs used by `main.js` | names and arity checked statically against 0.1.10, 0.1.11, 0.1.12 and 0.1.16 (below) | — | `herdr-app check` pending on every pair |
+| `herdr-app check` side effects (P28) | `checking()` guard added for app 0.1.16 | — | pending |
+| Namespace import of `herdr` | documented for `fs/promises` in the mod guide | — | confirm the mod loads on 0.1.10 |
 | Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on every pair |
 | App termination, core saves, read side effects, watch semantics (P24–P27) | 0.1.12 and 0.1.17 fixes read (below) | — | pending on every pair |
-| Watch paths from a symlinked home | canonicalization found in `src/files.rs` on all three app versions; fixed in the controller with tests | — | pending (P27) |
+| Watch paths from a symlinked home | canonicalization found in `src/files.rs` on app 0.1.10, 0.1.11, 0.1.12 and 0.1.16; fixed in the controller with tests | — | pending (P27) |
 | First-dock and uninstall behaviour | `mod.json` docking rule read | — | pending |
 | Fork contains `355a307` | not checked | — | pending |
 
@@ -25,13 +27,16 @@
 
 | Component | Revision |
 | --- | --- |
-| FirstMate | `355a30710d6e545fe57f720896ed440ee5d99a9a` |
+| FirstMate | `355a30710d6e545fe57f720896ed440ee5d99a9a` (design review) |
+| FirstMate | `427056c4181c41074ad24f051f79919330df0fa5` (`main`, November 12; captured fixtures) |
 | Herdr app | `8180cbe6c947519e8015dd7c35801a93e08a7d66` (mod API identical to `v0.1.10`) |
 | Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`; same mod surface, plain QuickJS interpreter) |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (`0.1.15`) |
 | Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`0.1.16`; core–holder reconnect, `shell = [...]`) |
 | Herdr app | `4aa3460749947e7771aa39a8a2cec58d46649926` (`v0.1.12`; same mod surface; Linux watches skip git-ignored directories) |
 | Herdr core | `ce87721557176f6cddaac1c7aefbf76929923263` (`0.1.17`; saves outside the state lock, prompt reads, macOS launchd core) |
+| Herdr app | `034f8b85f7e6bb71f8ff55cb4a80c548b2578c0f` (`v0.1.16`; `checking()`, `exec` timeout, cancellable watches) |
+| Herdr core | `1b0393f80c35b1dae34f37934d33d0144a8fc8d7` (`0.1.21`; same protocol methods) |
 
 ## Producer field mapping (source)
 
@@ -82,7 +87,7 @@ grep -ohE '\$\{?FM_[A-Z_]*(OVERRIDE|_NOW[A-Z_]*|CACHE_DIR)\b' \
 
 ## Static API check (source)
 
-`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json` (app 0.1.10 API), `tests/fixtures/gpui-surface-0.1.11.json` (`v0.1.11`) and `tests/fixtures/gpui-surface-0.1.12.json` (`v0.1.12`). `scripts/extract-gpui-surface.mjs` extracted all three. They are identical for everything `main.js` uses; shipped mods add the method names `hint` (0.1.11) and `keyboard`, `rebuilt`, `reconnect`, `shared` (0.1.12). Result on all three: no problems. Evidence per name:
+`tests/gpui-api.test.mjs` checks every method name `main.js` calls, whether it passes arguments, its `herdr`, `gpui-kit` and `gpui-base` imports, and its `theme()` colours against `tests/fixtures/gpui-surface.json` (app 0.1.10 API), `tests/fixtures/gpui-surface-0.1.11.json` (`v0.1.11`) and `tests/fixtures/gpui-surface-0.1.12.json` (`v0.1.12`) and `tests/fixtures/gpui-surface-0.1.16.json` (`v0.1.16`). `scripts/extract-gpui-surface.mjs` extracted all four. They are identical for everything `main.js` name-imports; 0.1.16 adds `checking`, `setBadge` and `setWindowTitle` to `herdr`, `ScrollHandle`, `Popup` and `TextView` to `gpui-base`, `drag_paths` and `on_pinch`. `main.js` reaches `checking` only through a guarded namespace import, which the test also checks. Result on all four: no problems. Evidence per name:
 
 | Evidence | Names in `main.js` |
 | --- | --- |
@@ -109,6 +114,21 @@ It proves names and argument presence, not argument types, which element a metho
 - **Watch paths are canonical** in `next_change` on every app version reviewed. A home reached through a symlink used to lose every change event to the panel's prefix filter; `notifyChange` now takes the watched folder and judges canonical paths by their own segments (`tests/controller.test.mjs`).
 - **App termination.** Core 0.1.17 starts through launchd on macOS so quitting the app no longer stops agents; agents started earlier pick it up on their next start. The panel's own behaviour on quit is `close(cx)` with a 250 ms budget; an `exec` already started keeps running.
 - **Saves.** Core 0.1.17 persists registry snapshots outside the state lock instead of freezing every terminal.
+
+## Herdr app 0.1.13–0.1.16 and core 0.1.18–0.1.21 (source, November 16)
+
+- **Mods:** a mod file's top level runs once for all copies (0.1.14); mods no longer all break after a while (0.1.14) or after a few hundred reloads (0.1.16); idle windows no longer wake every mod 20 times a second (0.1.14); heavy terminal output no longer freezes the window (0.1.15).
+- **`herdr-app check`** runs `init()` for real (0.1.16 docs). Before this review the panel ran the collector during every check. It now returns early while `checking()` is true; apps before 0.1.16 lack `checking()`, so a check there still runs the collector once.
+- **`watchFolder`** returns a cancellable handle and may reclaim idle watches (0.1.16). The panel cancels on close and home change and reloads after an empty batch.
+- **`exec`** takes `timeout` (0.1.14), default 30 s, and rejects when it expires; the controller labels that rejection as a timeout. The option is not passed yet.
+- **Core:** protocol method list unchanged from 0.1.17 to 0.1.21. Detached programs outlive their terminal (0.1.19), messages wait behind unsent drafts (0.1.20), the macOS core starts apart from the app after login (0.1.20), and `restore_screen` can show a dead agent's last screen (0.1.21). Those affect FirstMate's hc backend (hc rows I15, I20–I22), not the panel's collector.
+
+## FirstMate `main` since the pin (`427056c`, November 12)
+
+- **Bearings:** additive. `decisions_open[]` gains `question`, the full title, hold reason and options; FirstMate's contract says decision presentation uses it and `summary` must not replace it (#8173). The decoder keeps it; decision details show it. Re-captured fixtures differ from `355a307` only by that field.
+- **Override scrub list:** unchanged (re-derived with the command above).
+- **hc backend:** auto-selects hc when FirstMate runs in an app-projected terminal (#8060); submits with `hc send --wait` behind an `hc` ≥ 0.1.14 gate (#8037).
+- **OSC 7501 bridge** (#8011) is merged and on by default, so Herdr's Agents list now shows FirstMate-derived status for hc workers whose harness does not report its own.
 
 ## Native APIs to verify on the host
 

@@ -29,6 +29,8 @@ No live validation has been performed for this revision.
 
 **Revision 3.1 — October 31, 2026:** Tracks FirstMate PR #8011 (worker-side OSC 7501 reporting) as a possible integration enhancement, and adds model-pin readback (I11) and state-preservation regressions (I12) to the hc qualification matrix. The observational snapshot design is unchanged; see “Tracked upstream proposals”.
 
+**Revision 3.4 — November 16, 2026:** Reviews Herdr app 0.1.13–0.1.16 and core 0.1.18–0.1.21 and adds app 0.1.16 / core 0.1.21 as a fourth pair. The panel now skips work during `herdr-app check`, cancels and reloads folder watches, and names `exec` timeouts. FirstMate `main` (`427056c`) adds `decisions_open[].question`, which decision details show; #8011 is merged and on by default. P23 grows to 500 reloads; P28 covers `herdr-app check`.
+
 **Revision 3.3 — November 2, 2026:** Adds app 0.1.12 with core 0.1.17 as a third qualification pair, with P24–P27 for app termination, core saves under load, observation side effects and watch semantics, and hc rows I15–I19. States explicitly that worker survival is not conversation recovery or exactly-once external action. The static API check covers all three app revisions.
 
 **Revision 3.2 — November 1, 2026:** Adds app 0.1.11 with core 0.1.16 as a second qualification pair, with scenarios for repeated polling, slow snapshots, disconnects and hot reloads (P20–P23), and the matching hc rows (I13, I14). The static API check covers both app revisions.
@@ -64,9 +66,9 @@ When reviewed, herdr.dev/mods listed one community mod (tmux prefix). No FirstMa
 
 ### Tracked upstream proposals
 
-**Worker-side OSC 7501 reporting, FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011)** (open on October 31, 2026). Tracked as a possible integration enhancement; the [hc qualification specification](2026-10-30-firstmate-hc-qualification-spec.md#tracked-enhancement-worker-side-osc-7501-reporting-firstmate-8011) holds its conditional probes. If merged, each FirstMate worker's terminal carries an OSC 7501 record (`app=firstmate-<harness>`) unless the harness reports natively. Consequences for this panel:
+**Worker-side OSC 7501 reporting, FirstMate [PR #8011](https://github.com/kunchenguid/firstmate/pull/8011)**, merged into FirstMate `main` as `350cb69` and on by default (`config/osc7501-status`). The [hc qualification specification](2026-10-30-firstmate-hc-qualification-spec.md#tracked-enhancement-worker-side-osc-7501-reporting-firstmate-8011) holds its probes, now required for checkouts that contain it. Each FirstMate worker's terminal carries an OSC 7501 record (`app=firstmate-<harness>`) unless the harness reports natively. Consequences for this panel:
 
-- Herdr's Agents list would show “Needs you” for a worker whose status line is an open `needs-decision`, before any captain hold exists. Captain's Call shows only live captain holds. The two will disagree by design. That disagreement is the reason section 6 keeps FirstMate's section names apart from Herdr's agent words.
+- Herdr's Agents list shows “Needs you” for a worker whose status line is an open `needs-decision`, before any captain hold exists. Captain's Call shows only live captain holds. The two will disagree by design. That disagreement is the reason section 6 keeps FirstMate's section names apart from Herdr's agent words.
 - The phase 1b terminal join gains a FirstMate-originated status for non-native harnesses. It must show the record's `app` so a FirstMate-derived status is never read as the harness's own.
 - It changes no file the panel reads: Bearings and the canonical snapshot are untouched, and the bridge's watcher files are hidden files under `state/`, which the watch filter already ignores.
 
@@ -96,18 +98,21 @@ Source review established the following, not live interoperability:
 | Component | Reviewed revision | Relevant contract |
 | --- | --- | --- |
 | FirstMate upstream | `355a30710d6e545fe57f720896ed440ee5d99a9a` | `fm-bearings.v1` (`bin/fm-bearings-snapshot.sh`) and the Bearings skill; `fm-fleet-snapshot.v1`; `bin/fm-crew-state.sh`; `bin/fm-afk-return.sh` |
+| FirstMate upstream | `427056c4181c41074ad24f051f79919330df0fa5` (`main`, November 12) | Same schema; `decisions_open[].question` (#8173); OSC 7501 bridge (#8011); hc auto-selection in app terminals (#8060). Captured fixtures come from here |
 | Herdr app | `8180cbe6c947519e8015dd7c35801a93e08a7d66` (0.1.10 API) | Native JS mods: `exec`, `readTextFile`, `watchFolder`, `cx.timer`, `close(cx)`, docking |
 | Herdr app | `e12fd31866f33cb613922d0b33ea506e6f23ce3c` (`v0.1.11`) | Same mod API; mods run on the plain QuickJS interpreter |
 | Herdr core | `d02842335e33e4d70324e1122baeed8701f49e9b` (`v0.1.15`) | Terminal labels, for the phase 1b join only |
 | Herdr core | `e07c2a1bedd62cf4787ee026ee23ee79c7d95491` (`v0.1.16`) | Same CLI and protocol; core–holder reconnect; configurable default shell |
 | Herdr app | `4aa3460749947e7771aa39a8a2cec58d46649926` (`v0.1.12`) | Same mod API; Linux folder watches skip git-ignored directories; focusable mods |
 | Herdr core | `ce87721557176f6cddaac1c7aefbf76929923263` (`v0.1.17`) | Saves outside the state lock; prompt reads answer at once; macOS core runs apart from the app |
+| Herdr app | `034f8b85f7e6bb71f8ff55cb4a80c548b2578c0f` (`v0.1.16`) | Same mod API plus `checking()`, `exec` `timeout`, cancellable watches; mod engine memory fixes |
+| Herdr core | `1b0393f80c35b1dae34f37934d33d0144a8fc8d7` (`v0.1.21`) | Same protocol methods; macOS core separate after login (0.1.20); `restore_screen`; draft-held messages |
 
 Revision 2 also pinned FirstMate `df81d8166aab83f328aa3a05516cbe21882d5e23`. It is an ancestor of `355a307`, three commits earlier, and `fm-fleet-snapshot.sh`, `fm-fleet-view.sh`, `fm-bearings-snapshot.sh` and `fm-crew-state.sh` are identical between the two. `355a307` was upstream `main` on October 30, 2026.
 
 The app pin is two commits before the `v0.1.10` tag. Between them `defaults/herdr.d.ts` is unchanged and `defaults/AGENTS.md` gains one sentence about pointer drags, so the mod API reviewed here is the 0.1.10 API. Core `d028423` is the 0.1.15 release commit.
 
-Qualify three target pairs on the target host: app 0.1.10 with core 0.1.15 (the baseline), app **0.1.11** with core **0.1.16**, and app **0.1.12** with core **0.1.17**. Record binary versions, build revisions and checksums. Results are per pair; a pass on one is not a claim about another. Prefer the newest pair that passes for rollout.
+Qualify four target pairs on the target host: app 0.1.10 with core 0.1.15 (the baseline), app **0.1.11** with core **0.1.16**, app **0.1.12** with core **0.1.17**, and app **0.1.16** with core **0.1.21** (the newest when reviewed on November 16). Record binary versions, build revisions and checksums. Results are per pair; a pass on one is not a claim about another. Prefer the newest pair that passes for rollout.
 
 - **App 0.1.11** fixes the window freezing or spiking the CPU for seconds while mods run. The fix (`9af0ecc`) moves mods from the QuickJS JIT to the plain interpreter. Its engine comment explains that the JIT's upkeep ran on the main thread and grew with every loaded mod copy, because module generations are never freed. Repeated polling and hot reloads (P20, P23) are where this panel would hit that. The interpreter also means decode timings measured under Node (P14) must be re-measured in the app. The mod API the panel uses is unchanged: `herdr.d.ts` changes only in documentation, and the static check (`tests/gpui-api.test.mjs`) passes `main.js` against surfaces extracted from both app revisions.
 - **Core 0.1.16** fixes terminals freezing when the core falls behind or loses contact with its holder. The core now reconnects, and programs keep running (#47). The CLI and protocol are unchanged apart from the version. The collector reads hc task terminals (`hc read`, `hc get`) on every collection, so a core–holder disconnect lands inside a collection (P22).
@@ -116,7 +121,13 @@ Qualify three target pairs on the target host: app 0.1.10 with core 0.1.15 (the 
 - **Core 0.1.17 prompt reads** (`277f6a6`, #60): reading a full-screen agent waiting at a prompt now answers at once and never scrolls the prompt. On 0.1.15 and 0.1.16 such a read took about 25 seconds, beyond the collector's 10-second per-task bound, so those tasks would read as `unknown` and each collection would slow by that bound. It may also have scrolled the worker's prompt, a side effect of observation (P26, and P17 per pair).
 - **Core 0.1.17 launch delays**: terminals on Linux without polkit start at once instead of after 25 seconds (#62), and a template on another machine that takes over 30 seconds to get ready no longer fails (#63). The panel launches nothing; these belong to the hc qualification and to the phase 1b remote mode.
 - **App 0.1.12 folder watches on Linux** skip git-ignored directories, reject a tree over 4,096 non-ignored directories, and bound pending paths, reporting the watch root when they overflow. FirstMate's own `.gitignore` ignores `state/` and `data/`, and a home is often the checkout. The panel watches those folders as roots, so files directly inside still report; nested ones may not (P27). A rejected watch falls back to the timer.
-- Herdr canonicalizes every watched root, on all three app versions, so a home reached through a symlink reports paths under its real location. The controller accepts those paths from this home's own watches (P27).
+- Herdr canonicalizes every watched root, on every app version reviewed, so a home reached through a symlink reports paths under its real location. The controller accepts those paths from this home's own watches (P27).
+- **App 0.1.13 to 0.1.16, mod engine.** A mod file's top level now runs once and is shared by every copy (0.1.14); the panel keeps per-copy state in its class. Mods used to break all at once after a while (fixed 0.1.14), and the engine ran out of memory after a few hundred reloads (fixed 0.1.16), so P23 now runs 500 reloads and records where older pairs break. Idle windows no longer wake every mod 20 times a second (0.1.14), which changes P20's CPU baseline; heavy terminal output no longer freezes the window (0.1.15), which bears on P25.
+- **App 0.1.16 `checking()`.** `herdr-app check` runs `init()` for real, `exec` included. The panel skips collection, watches and its timer while `checking()` is true, reaching it through a guarded namespace import so older apps still load the mod. On apps before 0.1.16 a check still runs the collector once: check against a harmless home or before writing `.config.json` (P28).
+- **App 0.1.16 folder watches** return a handle with `cancel()`, may reclaim idle watches (resolving them with no paths), and no longer stick at the 64-folder limit. The panel cancels its watches on close and home change and treats an empty batch as a reload (P27).
+- **App 0.1.14 `exec` timeout.** `exec` takes `timeout` (default 30 s, up to 10 minutes) and rejects when it expires; the controller reports that as a timeout. The panel keeps the default until older apps are confirmed to accept the option; a longer limit would then absorb slow collections (P17, P21).
+- **macOS app termination, completed in core 0.1.20.** The core became its own app, Herdr Core, in 0.1.18 (app 0.1.13), and since 0.1.20 it also starts apart from the app after login or a reboot. Terminals opened before 0.1.20 can still end when Herdr quits, so P24 records which core version opened each terminal.
+- `ScrollHandle` (app 0.1.15) could keep the keyboard cursor in view in long lists. It is not adopted: a named import would stop the mod loading on older apps.
 
 The `AndrewGoldfinch/firstmate` fork (`experiment/pi-durable-supervision`) was not reinspected for this revision. Phase 0 must check whether the selected checkout contains `355a307` or an equivalent Bearings contract, without modifying the held Pi Durable experiment.
 
@@ -294,7 +305,7 @@ Stable keys use a JSON-encoded tuple, not an ambiguous string concatenation. Dup
 
 | Bearings field | Panel section | Required safeguard |
 | --- | --- | --- |
-| `decisions_open[]` `{id,key,verb,summary,owner}` | Captain's Call | Live captain holds only, as Bearings selects them (`hold_bucket == "live"`, main and secondmate homes). The panel adds nothing from status logs; `hints.pending_decision` is not an input |
+| `decisions_open[]` `{id,key,verb,summary,question,owner}` | Captain's Call | Lists show the bounded `summary`; details show `question` (FirstMate #8173: the full title, hold reason and options), which `summary` must not replace. `question` is null from producers before #8173. Live captain holds only, as Bearings selects them (`hold_bucket == "live"`, main and secondmate homes). The panel adds nothing from status logs; `hints.pending_decision` is not an input |
 | `in_flight[]` `{id,kind,state,repo,name,doing}` | Underway | Raw state word; secondmate children keep their `<mate>/<id>`; no inferred completion |
 | `landed[]` `{id,what,artifact,owner}` | Recently Landed | Bearings order (balanced across homes, newest first within each); no finish time is invented |
 | `gates[]` `{id,title,blocked_by,reason,owner,filed}` | Charted Next | Ids in parentheses, such as `(main-inventory)` and `(return-catchup)`, are action-free warnings: badge them “needs repair” and keep them out of the queued figure, as the board does. The tab count is still every row the tab lists; the note splits queued from needs-repair |
@@ -413,13 +424,14 @@ Live integration uses harmless shell workers and isolated state. Record changes 
 | P20 | Repeated fleet polling: 2 hours at `minIntervalMs = fallbackMs = 10000`, with `data/backlog.md` touched every second | No UI stall over 1 s; app CPU returns to idle between collections; app memory sampled every 10 minutes stays bounded; one request in flight throughout |
 | P21 | Slow snapshots: a stub FirstMate root whose `bin/fm-bearings-snapshot.sh` sleeps 5, 20, 29 and 35 s, then prints a captured fixture | UI responsive and “Refreshing…” shown while waiting; the 35 s case fails at the host limit with the last model kept as historical; no backlog of queued collections afterwards |
 | P22 | Disconnects: break the core–holder link during a collection that reads hc terminals, then stop and restart the core | The collection completes or fails within the host limit; never an empty fleet; the next collection recovers; no worker stopped; task state unchanged (hc I12) |
-| P23 | Repeated hot reloads: 100 saves of a visible mod file, 20 of them during an in-flight collection | P12's rules hold every time; UI stays responsive; memory growth per reload recorded; CPU does not grow with reload count |
-| P24 | App termination during a collection: close the window, quit, update, and `kill -9` the app | `close(cx)` disposes within its 250 ms; workers keep running and task state is unchanged (hc I15); the relaunched panel starts fresh and collects once; no second panel instance keeps polling |
+| P23 | Repeated hot reloads: 500 saves of a visible mod file, 50 of them during an in-flight collection | P12's rules hold every time; UI stays responsive; memory growth per reload recorded; CPU does not grow with reload count; on pairs before app 0.1.16, the reload count at which mods break is recorded |
+| P24 | App termination during a collection: close the window, quit, update, and `kill -9` the app | `close(cx)` disposes within its 250 ms; workers keep running and task state is unchanged (hc I15); the relaunched panel starts fresh and collects once; no second panel instance keeps polling; on macOS, record the core version that opened each worker's terminal (before 0.1.20 they can still end) |
 | P25 | Core state saves under load: 50 busy hc workers producing output while the core saves | Collection latency and `herdr-app status` stalls recorded per pair; no terminal freeze on 0.1.17; never an empty fleet |
 | P26 | Observation side effects: a full-screen agent waiting at a prompt, read by 20 collections | Per pair: per-read latency, and whether the agent's screen and scroll position changed (`herdr-app shot` before and after). Any change is recorded against the collector's observational claim on that pair |
-| P27 | Watch semantics: home as the FirstMate checkout (git-ignoring `state/` and `data/`), home outside any repository, home through a symlink, and a `state/` tree over 4,096 directories | Changes to `state/<id>.status`, `state/<id>.meta`, `state/.afk` and `data/backlog.md` start a collection within the debounce and minimum interval; otherwise the fallback cadence is observed and recorded |
+| P27 | Watch semantics: home as the FirstMate checkout (git-ignoring `state/` and `data/`), home outside any repository, home through a symlink, and a `state/` tree over 4,096 directories | Changes to `state/<id>.status`, `state/<id>.meta`, `state/.afk` and `data/backlog.md` start a collection within the debounce and minimum interval; otherwise the fallback cadence is observed and recorded. On app 0.1.16, a reclaimed watch (an empty batch) starts one reload and the watch restarts; close leaves no watch behind |
+| P28 | `herdr-app check` with a valid `.config.json` | On app 0.1.16 and later: no collector process, no watch, no timer, and the check passes. On earlier apps: one collector run is recorded as a known side effect |
 
-For P20–P27, measure from outside the app so a stalled window cannot hide its own stall. For example, time a `herdr-app status` reply once a second and sample the app's CPU and resident memory with `ps`; Task 0 confirms the window's main thread serves that reply. Run them on every target pair with the same home, fixture and settings. Older pairs' results are the baseline later fixes are measured against, not failures to be waived.
+For P20–P28, measure from outside the app so a stalled window cannot hide its own stall. For example, time a `herdr-app status` reply once a second and sample the app's CPU and resident memory with `ps`; Task 0 confirms the window's main thread serves that reply. Run them on every target pair with the same home, fixture and settings. Older pairs' results are the baseline later fixes are measured against, not failures to be waived.
 
 ### Five benefit measures
 
@@ -441,7 +453,7 @@ Measure collection latency (P17) separately from panel overhead. The collector w
 
 Panel acceptance requires all of the following:
 
-- P01–P27 pass with recorded evidence on each target pair claimed; critical state/identity tests cannot be waived by usability gains. P20–P27 are also run on the pairs not claimed, so a failure there is recorded against its version rather than hidden.
+- P01–P28 pass with recorded evidence on each target pair claimed; critical state/identity tests cannot be waived by usability gains. P20–P28 are also run on the pairs not claimed, so a failure there is recorded against its version rather than hidden.
 - `node --test tests/*.test.mjs` passes in the proposed companion repo.
 - `herdr-app check <installed-mod-path>` exits zero on the qualified host; this render-once check supplements live asynchronous testing.
 - A 30-minute live session on each claimed pair demonstrates failure/recovery, away mode, manual refresh, change-driven refresh, close and hot reload without task mutation or duplicate loops, with collections per hour recorded.
@@ -456,7 +468,7 @@ Roll out manually to one home. Roll back by removing the mod; no task-state migr
 | Phase | Deliverable | Entry / exit condition |
 | --- | --- | --- |
 | 0 — qualification | Bearings fixtures, collector latency and write set, override list, native mod shell, docking/uninstall record | Actual checkout contract, host APIs and costs recorded |
-| 1 — prototype | Observational Bearings panel | P01–P27 and panel acceptance gates pass on each claimed target pair |
+| 1 — prototype | Observational Bearings panel | P01–P28 and panel acceptance gates pass on each claimed target pair |
 | 1b — usability/remote | Read-only Herdr terminal join, fleet-ledger merge times, artifact opening, qualified remote collection, optional multi-home views | Separate tests per item; nothing here authorizes an action |
 | 2 — controlled panel actions | Focus/peek through Herdr's native commands, then decision answers through the Bearings board's intake | Fresh `spawn_gen` and label verification at action time; separate design review |
 | 3 — experiment view | Baseline/durable result display | Versioned result contract; outcome append and external delivery metrics separate |
@@ -561,7 +573,7 @@ Proposed repository files and responsibilities:
 
 - [ ] Build the 12 matched operator scenarios, their stored `/bearings` digests and explicit answer keys; include command use/action counting rules and alternated view order.
 - [ ] Add an evaluation check that both arms receive the same fixture digest and `forgeReads` setting, and record any supplementary baseline CLI tools. Exclude mismatched trials instead of comparing them.
-- [ ] Run P01–P27, the 30-minute live session, P14 timing and P17 latency measurements on each target pair (P14 in the app's interpreter as well as Node). Record authoritative-state diffs separately from allowed cache updates.
+- [ ] Run P01–P28, the 30-minute live session, P14 timing and P17 latency measurements on each target pair (P14 in the app's interpreter as well as Node). Record authoritative-state diffs separately from allowed cache updates.
 - [ ] Conduct the paired pilot, calculate the five benefit measures and report actual passes/misses without converting proposed targets into results.
 - [ ] Package the mod with install/rollback instructions, `RECIPE.md`, `preview.png` and the network disclosure. Commit measured results; retain experimental labels for unqualified combinations.
 

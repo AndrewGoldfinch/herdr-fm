@@ -6,7 +6,7 @@ A Herdr app mod that shows FirstMate's Bearings picture (Captain's Call, Underwa
 
 ## Requirements
 
-- Herdr app 0.1.10 with herdr-core 0.1.15, app 0.1.11 with core 0.1.16, or app 0.1.12 with core 0.1.17, on the same Linux host as FirstMate. All three pairs are qualification targets; prefer the newest pair that passes, since later releases fix mod-related window freezes, terminal freezes on core–holder disconnects and during saves, and 25-second prompt reads.
+- Herdr app 0.1.10 with herdr-core 0.1.15, app 0.1.11 with core 0.1.16, app 0.1.12 with core 0.1.17, or app 0.1.16 with core 0.1.21, on the same Linux host as FirstMate. All four pairs are qualification targets; prefer the newest pair that passes, since later releases fix mod-related window freezes, terminal freezes on core–holder disconnects and during saves, and 25-second prompt reads.
 - A FirstMate checkout that ships `bin/fm-bearings-snapshot.sh` with `--json` and `--fields` (upstream `355a307` or later), plus `env`, Bash and jq.
 
 ## Install
@@ -19,6 +19,8 @@ cd ~/.config/herdr-app/mods/firstmate-fleet
 "${EDITOR:-vi}" .config.json        # set firstmateRoot and firstmateHome
 herdr-app check ~/.config/herdr-app/mods/firstmate-fleet
 ```
+
+On app 0.1.16 and later the check does not start a collection. On earlier apps it runs FirstMate's collector once, SSH reads included, so run the check before writing `.config.json` if that matters.
 
 The first time Herdr sees the folder it docks the panel on the right at 420 px; after that your layout owns where it sits. The settings file is hidden (`.config.json`) so saving it does not hot-reload the mod and reinstalling does not overwrite it. The panel re-reads it before each collection.
 
