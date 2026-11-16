@@ -41,6 +41,7 @@
       "key": "pick-db",
       "verb": "captain-hold",
       "summary": "Choose session store: captain choice pending",
+      "question": "Choose session store: captain choice pending",
       "owner": "(main)"
     }
   ],

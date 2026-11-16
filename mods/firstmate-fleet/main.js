@@ -2,17 +2,23 @@
 // Observational only. The single command it runs is FirstMate's Bearings collector
 // (see host.js); it never sends, steers, answers, merges or stops anything.
 //
-// UNVERIFIED: written against the Herdr app 0.1.10 and 0.1.11 mod guide and the shipped mods,
+// UNVERIFIED: written against the Herdr app 0.1.10 to 0.1.16 mod guides and the shipped mods,
 // without a Herdr binary. `herdr-app check` and the live checks in Task 3 are pending.
 
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex, InputState, Input } from "gpui-base";
 import { exec, readTextFile, watchFolder, appHome, theme } from "herdr";
+// Functions newer apps add are reached through the namespace, so the mod still loads on
+// apps that lack them (a named import of a missing export fails to link).
+import * as herdrApi from "herdr";
 import { createController } from "./controller.js";
 import { createHost, configPathFor } from "./host.js";
 import { buildView, TABS } from "./view-model.js";
 
 const TICK_MS = 5000;
+
+// App 0.1.16: true while `herdr-app check` loads the mod, where init() runs for real.
+const isChecking = () => typeof herdrApi.checking === "function" && herdrApi.checking() === true;
 
 function makeClock() {
   const perf = globalThis.performance;
@@ -35,6 +41,7 @@ export default class FirstmateFleet extends View {
     this.controller = createController({ host: createHost({ exec, readTextFile }, configPathFor(appHome())), clock: makeClock() });
     this.watchHome = null;
     this.watching = new Set();
+    this.watchHandles = new Map();
     this.handle = cx.focus_handle();
     this.search = InputState.new({ placeholder: "Search id, title or repo" });
     this.search.on("change", (_e, cx) => {
@@ -43,8 +50,17 @@ export default class FirstmateFleet extends View {
       this.ui.cursor = 0;
       cx.notify();
     });
+    // A check must not run FirstMate's collector (and its SSH reads) or leave watches behind.
+    this.checkOnly = isChecking();
+    if (this.checkOnly) return;
     this.apply(this.controller.start(), cx);
     cx.timer.every(TICK_MS, (cx) => this.apply(this.controller.tick(), cx));
+  }
+
+  // App 0.1.16 watch handles can be cancelled; older apps return a plain promise.
+  cancelWatches() {
+    for (const w of this.watchHandles.values()) if (w && typeof w.cancel === "function") w.cancel();
+    this.watchHandles.clear();
   }
 
   // Redraw only when the controller says something visible changed; await its work in a task.
@@ -65,6 +81,7 @@ export default class FirstmateFleet extends View {
     if (home !== this.watchHome) {
       this.watchHome = home;
       this.watching = new Set();
+      this.cancelWatches();
     }
     if (!home) return;
     for (const dir of [`${home}/data`, `${home}/state`]) {
@@ -74,9 +91,13 @@ export default class FirstmateFleet extends View {
       cx.spawn(async () => {
         try {
           while (this.watchHome === home && this.watching === watchSet) {
-            const paths = await watchFolder(dir);
+            const watch = watchFolder(dir);
+            this.watchHandles.set(dir, watch);
+            const paths = await watch;
             if (this.watchHome !== home || this.watching !== watchSet) break;
-            this.controller.notifyChange(paths, dir);
+            // App 0.1.16 may reclaim an idle watch, resolving it with []; changes since then
+            // are unknown, so treat it like the watch root itself: reload (still rate-limited).
+            this.controller.notifyChange(paths && paths.length ? paths : [dir], dir);
           }
         } catch {
           // Missing folder or watcher error: forget it so the next collection retries.
@@ -90,6 +111,7 @@ export default class FirstmateFleet extends View {
   async close(_cx) {
     this.watchHome = null;
     this.watching = new Set();
+    this.cancelWatches();
     this.controller.dispose();
   }
 
@@ -145,6 +167,7 @@ export default class FirstmateFleet extends View {
       .child(this.header(t, v))
       .child(this.searchBar(t))
       .when(v.banners.length > 0, (el) => el.child(this.bannerList(t, v)))
+      .when(Boolean(this.checkOnly), (el) => el.child(div().px(12).py(4).text_size(11).text_color(t.dim).child("Loaded by herdr-app check: the collector is not started.")))
       .child(this.tabBar(t, v))
       .child(v.details ? this.detailsPane(t, v) : this.body(t, v));
   }

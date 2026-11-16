@@ -15,7 +15,7 @@ const decode = (name) => decodeBearings(read(`${name}.json`), HOME, 0);
 const ids = (rows) => rows.map((r) => r.id);
 
 test("captured from the pinned FirstMate revision with forge reads off and no network attempts", () => {
-  assert.equal(manifest.firstmate_revision, "355a30710d6e545fe57f720896ed440ee5d99a9a");
+  assert.equal(manifest.firstmate_revision, "427056c4181c41074ad24f051f79919330df0fa5");
   assert.equal(manifest.forge_reads, false);
   for (const run of manifest.runs) assert.equal(run.network_attempts, 0, run.scenario);
 });
@@ -70,6 +70,7 @@ test("holds (P03 against the real producer): only the live hold is a captain cal
   const { model } = decode("holds");
   assert.deepEqual(ids(model.rows.captain_call), ["pick-db"]);
   assert.equal(model.rows.captain_call[0].detail, "captain-hold");
+  assert.equal(model.rows.captain_call[0].question, "Choose session store: captain choice pending", "FirstMate #8173 adds the full question");
   assert.deepEqual(ids(model.rows.charted_next), ["schema-change", "vendor-contract", "pricing"]);
   assert.deepEqual(model.rows.charted_next.map((g) => g.detail), [
     "blocked-by ask-api: needs schema",

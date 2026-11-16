@@ -379,6 +379,18 @@ test("oversized output and exec rejection are failures", async () => {
   assert.match(env.c.getState().error.message, /no such folder/);
 });
 
+test("an exec timeout is named as a timeout, not a failure to start", async () => {
+  // App 0.1.14 documents that exec rejects on timeout (default 30 s).
+  const env = setup();
+  const a = await started(env);
+  env.host.pending.shift().reject(new Error("timed out after 30000 ms"));
+  await a.pending;
+  await flush();
+  const e = env.c.getState().error;
+  assert.equal(e.category, "timeout");
+  assert.match(e.message, /did not finish within Herdr's time limit/);
+});
+
 test("P13: stale at staleAfterMs; an old model is stale on arrival", async () => {
   const env = setup();
   await env.settle(ok(), await started(env));

@@ -61,11 +61,14 @@ function rowBase(section, id, owner) {
     paths: null,
     artifacts: [],
     ambiguous: false,
+    question: null,
   };
 }
 
 const BUILDERS = {
-  captain_call: (r) => ({ ...rowBase("captain_call", r.id, text(r.owner)), title: text(r.summary) ?? r.id, detail: text(r.verb) }),
+  // `summary` is Bearings' bounded overview; `question` (FirstMate #8173) is the full
+  // decision with its options, which presentation must use when it is given.
+  captain_call: (r) => ({ ...rowBase("captain_call", r.id, text(r.owner)), title: text(r.summary) ?? r.id, detail: text(r.verb), question: text(r.question) }),
   underway: (r) => ({
     ...rowBase("underway", r.id, null),
     title: text(r.name) ?? r.id,

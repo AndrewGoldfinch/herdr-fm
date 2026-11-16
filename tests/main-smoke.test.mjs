@@ -16,8 +16,8 @@ before(async () => {
 
 const flush = () => new Promise((r) => setImmediate(r));
 
-function harness({ config = configText(), result = { code: 0, stdout: fixtureText("normal"), stderr: "" } } = {}) {
-  const calls = { exec: [], read: [], watch: [] };
+function harness({ config = configText(), result = { code: 0, stdout: fixtureText("normal"), stderr: "" }, checking = false, watchBatches = {} } = {}) {
+  const calls = { exec: [], read: [], watch: [], cancel: [] };
   globalThis.__herdr = {
     exec: async (...args) => {
       calls.exec.push(args);
@@ -27,10 +27,15 @@ function harness({ config = configText(), result = { code: 0, stdout: fixtureTex
       calls.read.push(path);
       return config;
     },
+    // App 0.1.16 returns a handle with cancel(); queued batches resolve first, then it waits.
     watchFolder: (dir) => {
       calls.watch.push(dir);
-      return new Promise(() => {});
+      const queue = watchBatches[dir] ?? [];
+      const p = queue.length ? Promise.resolve(queue.shift()) : new Promise(() => {});
+      p.cancel = () => calls.cancel.push(dir);
+      return p;
     },
+    checking: () => checking,
   };
   const tasks = [];
   const timers = [];
@@ -155,6 +160,28 @@ test("close disposes: later ticks start nothing", async () => {
   for (let i = 0; i < 3; i++) h.timers[0].fn(h.cx);
   await settled(h);
   assert.equal(h.calls.exec.length, 1);
+});
+
+test("during herdr-app check (app 0.1.16 checking()), nothing runs: no collector, watch or timer", async () => {
+  const h = harness({ checking: true });
+  await settled(h);
+  assert.equal(h.calls.exec.length, 0);
+  assert.equal(h.calls.watch.length, 0);
+  assert.equal(h.timers.length, 0);
+  assert.match(text(h.panel.render()).join("\n"), /herdr-app check/);
+});
+
+test("close cancels the folder watches it started", async () => {
+  const h = harness();
+  await settled(h);
+  await h.panel.close(h.cx);
+  assert.deepEqual(h.calls.cancel.sort(), [`${HOME}/data`, `${HOME}/state`]);
+});
+
+test("an empty watch batch (a reclaimed watch on app 0.1.16) is read as 'reload', and the watch restarts", async () => {
+  const h = harness({ watchBatches: { [`${HOME}/state`]: [[]] } });
+  await settled(h);
+  assert.equal(h.calls.watch.filter((d) => d === `${HOME}/state`).length, 2, "watch started again after the empty batch");
 });
 
 test("hostile task text is rendered as plain strings", async () => {

@@ -10,7 +10,7 @@
   "secondmates": [],
   "secondmate_reconcile": [],
   "decisions_open": [
-    { "id": "pick-db", "key": "pick-db", "verb": "captain-hold", "summary": "Choose session store: Redis or Postgres?", "owner": "(main)" },
+    { "id": "pick-db", "key": "pick-db", "verb": "captain-hold", "summary": "Choose session store: Redis or Postgres?", "question": "Choose session store: Redis or Postgres? Options: redis (new cluster, fastest) or postgres (reuse the existing cluster, slower sessions).", "owner": "(main)" },
     { "id": "mate-a/release-notes", "key": "release-notes", "verb": "captain-hold", "summary": "Release notes: publish now or wait for QA?", "owner": "mate-a" }
   ],
   "landed": [],

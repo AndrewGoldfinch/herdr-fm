@@ -61,8 +61,9 @@ const BUILTIN_SOURCES = [Array.prototype, String.prototype, Set.prototype, Map.p
 const BUILTINS = new Set(BUILTIN_SOURCES.flatMap((o) => Object.getOwnPropertyNames(o)));
 BUILTINS.add("now");
 
-// Not GPUI: the callback context, the controller, and InputState instances.
-const CX = ["notify", "spawn", "every", "after", "focus_handle", "stop_propagation"];
+// Not GPUI: the callback context, the controller, and a watch handle's cancel() (app 0.1.16,
+// called only when present).
+const CX = ["notify", "spawn", "every", "after", "focus_handle", "stop_propagation", "cancel"];
 const CONTROLLER = ["start", "tick", "refresh", "notifyChange", "dispose", "getState", "configure"];
 
 function ownMethods(src) {
@@ -84,7 +85,11 @@ function importsFrom(src, module) {
  */
 export function checkSource(src, surface) {
   const problems = [];
-  const code = stripStringsAndComments(src);
+  // Calls on a namespace import of "herdr" are checked by gpui-api.test.mjs against the newest
+  // app and must be guarded; they are not GPUI element methods.
+  const namespaces = [...src.matchAll(/import\s+\*\s+as\s+(\w+)\s+from\s+"herdr"/g)].map((m) => m[1]);
+  let code = stripStringsAndComments(src);
+  for (const ns of namespaces) code = code.replace(new RegExp(`\\b${ns}\\.\\w+`, "g"), "herdr_namespace_member");
   const skip = new Set([...BUILTINS, ...CX, ...CONTROLLER, ...ownMethods(code)]);
   const param = new Set(surface.paramStyles);
   const flexible = new Set([...surface.behaviors, ...surface.jsMethods]);

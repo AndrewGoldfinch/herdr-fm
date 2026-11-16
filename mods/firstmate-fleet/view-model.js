@@ -102,6 +102,7 @@ function details(row, model) {
     ["Id", row.id],
     ["Section", LABELS[row.section]],
     ["Title", row.title],
+    ...(row.question ? [["Question", row.question]] : []),
   ];
   if (row.owner) lines.push(["Owner", row.owner]);
   if (row.repo) lines.push(["Repo", row.repo]);

@@ -15,6 +15,9 @@ This repo holds a Herdr app mod (`mods/firstmate-fleet`) that renders FirstMate'
 - Only `main.js` imports `herdr`, `gpui-kit` or `gpui-base`. Everything else is pure and tested under Node.
 - Herdr runs mods on QuickJS. Keep to plain ES2020: no Node APIs, no `setTimeout`, no top-level `await`, no DOM.
 - In `main.js`, never keep a `cx` for later; use the one each callback receives. Redraw only when something shown changed.
+- From app 0.1.14 a mod file's top level runs once and is shared by every copy of the mod. Keep per-copy state in the class, never in module-level variables.
+- Name-import from `herdr` only what the oldest target app exports. Reach newer functions (`checking`, `setBadge`, ...) through `import * as herdrApi from "herdr"` behind a `typeof herdrApi.name === "function"` guard; `tests/gpui-api.test.mjs` enforces both.
+- Nothing with side effects may start while `checking()` is true (app 0.1.16): `herdr-app check` runs `init()` for real.
 
 ## Tests
 

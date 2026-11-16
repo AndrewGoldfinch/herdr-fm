@@ -129,6 +129,16 @@ test("artifact and endpoint text in details, with the identity caveat", () => {
   assert.equal(endpointText(null), "none reported");
 });
 
+test("decision details show the full question, which the summary must not replace", () => {
+  const m = model("holds");
+  const v = buildView(state({ model: m }), { ...UI, selectedKey: m.rows.captain_call[0].key });
+  const lines = Object.fromEntries(v.details.lines);
+  assert.match(lines.Question, /Options: redis .* or postgres/);
+  assert.equal(v.details.title, "Choose session store: Redis or Postgres?");
+  const mate = buildView(state({ model: m }), { ...UI, selectedKey: m.rows.captain_call[1].key });
+  assert.equal(Object.fromEntries(mate.details.lines).Question, undefined);
+});
+
 test("a selected key that disappears clears the details", () => {
   const v = buildView(state(), { ...UI, selectedKey: JSON.stringify(["underway", "", "gone"]) });
   assert.equal(v.details, null);

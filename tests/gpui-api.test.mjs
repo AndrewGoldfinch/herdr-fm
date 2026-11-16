@@ -11,6 +11,7 @@ const TARGETS = [
   { version: "0.1.10", file: "gpui-surface.json", revision: "8180cbe6c947519e8015dd7c35801a93e08a7d66" },
   { version: "0.1.11", file: "gpui-surface-0.1.11.json", revision: "e12fd31866f33cb613922d0b33ea506e6f23ce3c" },
   { version: "0.1.12", file: "gpui-surface-0.1.12.json", revision: "4aa3460749947e7771aa39a8a2cec58d46649926" },
+  { version: "0.1.16", file: "gpui-surface-0.1.16.json", revision: "034f8b85f7e6bb71f8ff55cb4a80c548b2578c0f" },
 ];
 const surface = load(TARGETS[0].file);
 
@@ -34,6 +35,19 @@ for (const target of TARGETS) {
     assert.ok(checkSource(mainSrc.replace("import { exec,", "import { execute,"), s).problems.includes("herdr has no export execute"));
   });
 }
+
+test("newer herdr functions are reached through a namespace import and guarded", () => {
+  // A named import of an export an older app lacks would stop the mod loading there.
+  const ns = /import\s+\*\s+as\s+(\w+)\s+from\s+"herdr"/.exec(mainSrc);
+  assert.ok(ns, "main.js has a namespace import of herdr");
+  const newest = load(TARGETS[TARGETS.length - 1].file);
+  const members = [...new Set([...mainSrc.matchAll(new RegExp(`\\b${ns[1]}\\.(\\w+)`, "g"))].map((m) => m[1]))];
+  assert.ok(members.length > 0);
+  for (const name of members) {
+    assert.ok(newest.herdrExports.includes(name), `${name} exists in the newest app`);
+    assert.ok(mainSrc.includes(`typeof ${ns[1]}.${name} === "function"`), `${name} is guarded`);
+  }
+});
 
 test("only main.js imports herdr or gpui modules", () => {
   for (const file of ["config.js", "decode.js", "project.js", "controller.js", "host.js", "view-model.js"]) {

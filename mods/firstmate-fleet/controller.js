@@ -214,8 +214,15 @@ export function createController({ host, clock, parse = parseConfig, decode = de
             diag.category = "superseded";
             return;
           }
-          fail("spawn", `Could not run the collector: ${sanitize(String(err?.message ?? err))}`);
-          diag.category = "spawn";
+          const why = String(err?.message ?? err);
+          // Herdr's exec rejects on its time limit (30 s by default) as well as on a failed start.
+          if (/timed?[ -]?out|timeout/i.test(why)) {
+            fail("timeout", "The collector did not finish within Herdr's time limit.", why);
+            diag.category = "timeout";
+          } else {
+            fail("spawn", `Could not run the collector: ${sanitize(why)}`);
+            diag.category = "spawn";
+          }
           return;
         }
         if (s.disposed || epoch !== s.epoch) {

@@ -90,6 +90,15 @@ test("P03: only Bearings' decisions_open becomes Captain's Call; a parked needs-
   assert.equal(gates[3].detail, "until 2026-11-15: waiting on vendor");
 });
 
+test("captain calls keep FirstMate's full question when it is given, and null when it is not", () => {
+  const { model } = decode("holds");
+  const [main, mate] = model.rows.captain_call;
+  assert.match(main.question, /Options: redis .* or postgres/);
+  assert.equal(main.title, "Choose session store: Redis or Postgres?", "the list keeps the bounded summary");
+  assert.equal(mate.question, null, "an older producer without question decodes as null");
+  assert.equal(decode("normal").model.rows.underway[0].question, null, "only captain calls carry a question");
+});
+
 test("P04: cached and unreadable secondmates keep provenance, freshness and null age", () => {
   const { model } = decode("cached-secondmate");
   const [b, c] = model.secondmates;
