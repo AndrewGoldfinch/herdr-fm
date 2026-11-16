@@ -335,7 +335,9 @@ Secondmate freshness is independent: advance a supplied `age_seconds` by elapsed
 
 ## 6. User interface
 
-Use one mod named `firstmate-fleet`, initially docked on the right with a proposed width of 420 logical pixels. `mod.json` contains `{ "place": "right", "size": 420 }`. Herdr docks one copy into the shown layout the first time it sees the folder; after that the layout owns placement. The root class extends `View`; render from a pure model and keep commands out of `render`.
+Use one mod named `firstmate-fleet`, initially docked on the right with a proposed width of 420 logical pixels. `mod.json` contains `{ "place": "right", "size": 420 }`. Herdr docks one copy into the shown layout the first time it sees the folder, unless that layout is a shipped one, whose structure Herdr does not edit; after that the layout owns placement. A docked copy sits at the window edge, like the sidebar, not inside the work area with the Files and Changes cards. The root class extends `View`; render from a pure model and keep commands out of `render`.
+
+Look like Herdr's own panels (app 0.1.16 defaults): the sidebar's `chrome` background and 13 px text, the Files and Changes header (42 px, semibold title, dim detail) and input, sidebar-style rows (8 px radius, `selected` and `hover`), dim counts as in the Agents headings, and plain dim notes. Errors use `ansi1` as Changes does; warnings use `blocked`, Herdr's attention colour, in Agents' tinted badge. Colours are borrowed; status words are not.
 
 Use FirstMate's section names. Do not use Herdr's agent-status words (“Needs you”, “Done”, “Working”, “Idle”) for FirstMate sections. The Agents list beside the panel uses them for terminal status, and the two can legitimately disagree.
 

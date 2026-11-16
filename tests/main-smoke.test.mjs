@@ -80,7 +80,7 @@ test("renders every tab and the details pane without throwing", async () => {
   await settled(h);
   let root = h.panel.render();
   const all = text(root).join("\n");
-  assert.match(all, /Captain's Call 1/);
+  assert.match(all, /Captain's Call\n1\n/, "label and its count, shown dim beside it");
   assert.match(all, /Choose session store/);
   for (const section of ["underway", "landed", "charted_next", "secondmates", "unhealthy", "captain_call"]) {
     find(root, `tab-${section}`)._handlers.on_click({}, h.cx);
