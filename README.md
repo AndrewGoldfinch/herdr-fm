@@ -2,7 +2,7 @@
 
 A Herdr app mod that shows FirstMate's Bearings picture (Captain's Call, Underway, Recently Landed, Charted Next, secondmates and endpoint warnings) as a native panel docked on the right of the window. It is read-only: it never sends, steers, answers, merges or stops anything.
 
-**Status:** prototype. The pure modules are covered by `node --test`. The mod has **not** yet been loaded by a real Herdr app (`herdr-app check` and the live checks in [Task 3](docs/2026-10-30-firstmate-herdr-technical-spec.md#task-3--integrate-the-native-fleet-view) are pending). The decoder is tested against real output from FirstMate's collector on synthetic homes (`tests/fixtures/captured/`, made with `bash scripts/capture-fixtures.sh <firstmate-checkout>`), but not yet against a live home. See [docs/qualification.md](docs/qualification.md).
+**Status:** prototype. The pure modules are covered by `node --test`. `herdr-app check` has passed once, on the Windows build of app 0.1.16 with no `.config.json`; the check on the other pairs, on a Linux host and with a config, and the live checks in [Task 3](docs/2026-10-30-firstmate-herdr-technical-spec.md#task-3--integrate-the-native-fleet-view) are pending. The decoder is tested against real output from FirstMate's collector on synthetic homes (`tests/fixtures/captured/`, made with `bash scripts/capture-fixtures.sh <firstmate-checkout>`), but not yet against a live home. See [docs/qualification.md](docs/qualification.md).
 
 ## Requirements
 
@@ -20,7 +20,11 @@ cd ~/.config/herdr-app/mods/firstmate-fleet
 herdr-app check ~/.config/herdr-app/mods/firstmate-fleet
 ```
 
-On app 0.1.16 and later the check does not start a collection. On earlier apps it runs FirstMate's collector once, SSH reads included, so run the check before writing `.config.json` if that matters.
+On app 0.1.16 and later the check should not start a collection (the panel returns early while `checking()` is true; P28 has not confirmed it live yet). On earlier apps it runs FirstMate's collector once, SSH reads included, so run the check before writing `.config.json` if that matters.
+
+The check writes `gpui-kit.d.ts` and `jsconfig.json` (editor type files) into the folder it checks. Both are git-ignored if you check `mods/firstmate-fleet` in this repo.
+
+The Windows app loads the mod, but the panel cannot collect there: the collector runs through `env` and Bash, and settings take absolute POSIX paths.
 
 The first time Herdr sees the folder it docks the panel on the right at 420 px; after that your layout owns where it sits. The settings file is hidden (`.config.json`) so saving it does not hot-reload the mod and reinstalling does not overwrite it. The panel re-reads it before each collection.
 

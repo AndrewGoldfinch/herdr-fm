@@ -1,6 +1,6 @@
 # Qualification record (Task 0)
 
-**Status: partial.** Items marked *source* were established by reading upstream code at the pinned revisions. Items marked *synthetic* ran FirstMate's real collector at `355a307` and again at `427056c` against throwaway homes with `scripts/capture-fixtures.sh` (no live harnesses, fake tmux, network tools stubbed). Nothing has run against a live FirstMate home or a Herdr app.
+**Status: partial.** Items marked *source* were established by reading upstream code at the pinned revisions. Items marked *synthetic* ran FirstMate's real collector at `355a307` and again at `427056c` against throwaway homes with `scripts/capture-fixtures.sh` (no live harnesses, fake tmux, network tools stubbed). Items marked *live* ran on a real host. The only live result so far is one `herdr-app check` on the Windows build of app 0.1.16 (see [Host results](#host-results)). Nothing has run against a live FirstMate home.
 
 | Item | Source | Synthetic | Live |
 | --- | --- | --- | --- |
@@ -14,9 +14,10 @@
 | Collection latency (P17) | bounds read (below) | `355a307`: 25 tasks 4.2 s, 50 tasks 7.5 s; `427056c`: 2.7 s and 4.4 s | pending with real endpoints |
 | Network attempts with `forgeReads: false`, no secondmates | — | 0 in every run | pending with remote homes |
 | Collector write set under `data/` and `state/` | cache dir only, by source | not measured | pending |
-| Native APIs used by `main.js` | names and arity checked statically against 0.1.10, 0.1.11, 0.1.12 and 0.1.16 (below) | — | `herdr-app check` pending on every pair |
-| `herdr-app check` side effects (P28) | `checking()` guard added for app 0.1.16 | — | pending |
-| Namespace import of `herdr` | documented for `fs/promises` in the mod guide | — | confirm the mod loads on 0.1.10 |
+| Native APIs used by `main.js` | names and arity checked statically against 0.1.10, 0.1.11, 0.1.12 and 0.1.16 (below) | — | `herdr-app check` passed on 0.1.16 (Windows build), pre-start render only; pending on 0.1.10, 0.1.11 and 0.1.12 |
+| `herdr-app check` side effects (P28) | `checking()` guard added for app 0.1.16; the app's docs say `checking()` is true throughout a check | — | not shown: the 0.1.16 check ran without `.config.json`, so nothing would have started either way |
+| Namespace import of `herdr` | documented for `fs/promises` in the mod guide | — | loads on 0.1.16; confirm on 0.1.10 |
+| Files written by `herdr-app check` | — | — | `gpui-kit.d.ts` and `jsconfig.json` in the checked folder (0.1.16); git-ignored |
 | Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on every pair |
 | App termination, core saves, read side effects, watch semantics (P24–P27) | 0.1.12 and 0.1.17 fixes read (below) | — | pending on every pair |
 | Watch paths from a symlinked home | canonicalization found in `src/files.rs` on app 0.1.10, 0.1.11, 0.1.12 and 0.1.16; fixed in the controller with tests | — | pending (P27) |
@@ -158,8 +159,48 @@ Time grows by roughly 130–150 ms per task here, which would reach Herdr's 30-s
 
 Field sets in the captured output match the hand-written fixtures exactly. Captain's Call held only the live hold; blocked, dated and aged holds were Charted Next gates; a task whose status line asked for a decision without a captain hold stayed in Underway with state `unknown`.
 
+## Host results
+
+### `herdr-app check`, app 0.1.16, Windows (November 16)
+
+- **Install:** `mods/firstmate-fleet` from `main` at `225b471`, copied to `%USERPROFILE%\.config\herdr-app\mods\firstmate-fleet` (a new folder). No `.config.json`.
+- **Command:** `herdr-app check <that folder>`, with `herdr-app.exe` 0.1.16 from the per-user install.
+- **Result:** exit 0. Standard output was `check passed: <folder>`; nothing on standard error.
+- **Left behind:** `gpui-kit.d.ts` (819,832 bytes) and `jsconfig.json` (1,397 bytes) in the checked folder. The app writes these editor type files on launch and check (`vendor/gpui-kit/crates/shell/src/typings.rs`). The repo now ignores them under `mods/firstmate-fleet/`.
+
+What a check covers, from `ShellRuntime::check` in `vendor/gpui-kit/crates/shell/src/plugin.rs` at `034f8b8`: it loads the module, runs `init()`, renders once and materializes that render's native elements in a hidden window. "Deferred slots, nested view renders, and later interaction and asynchronous states do not run."
+
+So this run shows:
+- `main.js` and every module it imports load in app 0.1.16's QuickJS, including `import * as herdrApi from "herdr"`.
+- `init()` completes: `InputState.new`, `.on("change")`, `cx.focus_handle()` and the `checking()` guard.
+- The pre-start render materializes: header, search input, the "Loading fleet…" banner, the check-only line, the tab bar and an empty list with its pager.
+
+It does not show:
+- Row lists, the details pane, error, setup or away banners, keyboard handling, timers or watches. The smoke test covers those paths for JavaScript errors only.
+- P28. Without `.config.json` the panel starts nothing whether or not the guard works.
+- Anything about apps 0.1.10–0.1.12 or a Linux host.
+
+A Windows app cannot run P28 or any live scenario: `parseConfig` accepts only absolute POSIX paths, and the collector runs through `env` and Bash.
+
+### P28 procedure (Linux host)
+
+A fake checkout whose collector leaves a marker. The panel runs the collector as `bash <root>/bin/fm-bearings-snapshot.sh`, so the script needs no execute bit.
+
+```sh
+lab=$(mktemp -d)
+mkdir -p "$lab/root/bin" "$lab/home"
+printf '#!/bin/sh\ntouch "%s/ran"\n' "$lab" > "$lab/root/bin/fm-bearings-snapshot.sh"
+mod=~/.config/herdr-app/mods/firstmate-fleet
+printf '{"schema":"firstmate-herdr-panel.config.v2","firstmateRoot":"%s/root","firstmateHome":"%s/home"}\n' "$lab" "$lab" > "$mod/.config.json"
+herdr-app check "$mod"; echo "exit=$?"
+if [ -e "$lab/ran" ]; then echo "collector ran"; else echo "collector did not run"; fi
+rm "$mod/.config.json"
+```
+
+Pass on 0.1.16: exit 0 and "collector did not run". On 0.1.10–0.1.12 the expected result is "collector ran" (no `checking()`), recorded as a known side effect. Restore any real `.config.json` afterwards.
+
 ## Next steps
 
 1. On the qualified host, capture from a real disposable home with live harnesses and a registered secondmate; measure P17 with real endpoints and count SSH reads.
 2. Record the collector's write set under `data/` and `state/`.
-3. Install the mod, run `herdr-app check`, record first-dock and uninstall behaviour, and fix any GPUI API mismatches.
+3. On a Linux host, run `herdr-app check` on every pair and the P28 procedure above, then record first-dock and uninstall behaviour and fix any GPUI API mismatches.
