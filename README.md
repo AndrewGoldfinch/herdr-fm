@@ -47,11 +47,13 @@ The panel can't run the collector on Windows itself: it needs `env`, Bash and jq
    ```
 
    If WSL has no herdr-core or an old one, `hc` offers to copy it there.
-2. Check that the collector's tools are on the path there. This should print three paths:
+2. Check that the collector's tools are on the path there. This should print three paths and no `missing:` line:
 
    ```powershell
-   hc exec --on wsl sh -c 'command -v env bash jq'
+   hc exec --on wsl sh -c 'for t in env bash jq; do command -v "$t" || echo "missing: $t"; done'
    ```
+
+   One name per `command -v`: WSL's `sh` is usually dash, which answers only the first of several.
 
    This runs with the same environment the collector gets, which isn't your login shell's. Tools that only `~/.bashrc` or `~/.profile` put on the path won't be found; the same goes for anything FirstMate's backends call, such as `tmux` or `hc`.
 
