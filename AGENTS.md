@@ -4,7 +4,7 @@ This repo holds a Herdr app mod (`mods/firstmate-fleet`) that renders FirstMate'
 
 ## Boundaries
 
-- **Observational only.** The panel's one command is the Bearings collector built by `collectorArgv` in `host.js`. Do not add calls to `fm-send`, `fm-spawn`, `fm-teardown`, `fm-watch`, `fm-captain-hold`, `fm-bearings-board`, `fm-secondmate-reconcile`, `hc kill`, `--include-prs`, `--fields actions`, or any app command that closes panes or stops terminals.
+- **Observational only.** The panel's one command is the Bearings collector built by `collectorArgv` in `host.js`. With `machine` set, that same command runs on that Herdr machine through `exec`'s `on`; nothing else may run there. Do not add calls to `fm-send`, `fm-spawn`, `fm-teardown`, `fm-watch`, `fm-captain-hold`, `fm-bearings-board`, `fm-secondmate-reconcile`, `hc kill`, `--include-prs`, `--fields actions`, or any app command that closes panes or stops terminals.
 - **No classification in the mod.** Bearings owns which rows are captain calls, gates, landed or underway. `decode.js` validates and reshapes; it must not filter, re-sort, merge or infer state. Do not read `.meta`, backlog Markdown, status logs or terminal output.
 - **Task text is data.** Never build commands, URLs to open or markup from row content.
 - **Unknown stays unknown.** `null`, `"unknown"` and `"not_checked"` are shown as such, never as false or zero. Never show an "all clear".

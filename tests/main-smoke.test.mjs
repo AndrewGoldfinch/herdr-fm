@@ -6,7 +6,7 @@ import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { register } from "node:module";
 import { walk, text } from "./stubs/element.mjs";
-import { fixtureText, configText, HOME } from "./helpers.mjs";
+import { fixtureText, configText, HOME, ROOT } from "./helpers.mjs";
 
 let Panel;
 before(async () => {
@@ -25,7 +25,7 @@ function harness({ config = configText(), result = { code: 0, stdout: fixtureTex
     },
     readTextFile: async (path) => {
       calls.read.push(path);
-      return config;
+      return typeof config === "function" ? config() : config;
     },
     // App 0.1.16 returns a handle with cancel(); queued batches resolve first, then it waits.
     watchFolder: (dir) => {
@@ -182,6 +182,29 @@ test("an empty watch batch (a reclaimed watch on app 0.1.16) is read as 'reload'
   const h = harness({ watchBatches: { [`${HOME}/state`]: [[]] } });
   await settled(h);
   assert.equal(h.calls.watch.filter((d) => d === `${HOME}/state`).length, 2, "watch started again after the empty batch");
+});
+
+test("with a machine: the collector runs there, no folder is watched, and the header names it", async () => {
+  const h = harness({ config: configText({ machine: "wsl" }) });
+  await settled(h);
+  assert.equal(h.calls.exec.length, 1);
+  assert.deepEqual(h.calls.exec[0][2], { cwd: ROOT, on: "wsl" });
+  assert.deepEqual(h.calls.watch, []);
+  assert.match(text(h.panel.render()).join("\n"), /on wsl/);
+});
+
+test("moving the home to a machine cancels the local watches and starts none there", async () => {
+  let cfg = configText();
+  const h = harness({ config: () => cfg });
+  await settled(h);
+  assert.equal(h.calls.watch.length, 2);
+  cfg = configText({ machine: "wsl" });
+  find(h.panel.render(), "refresh")._handlers.on_click({}, h.cx);
+  await settled(h);
+  assert.equal(h.calls.exec.length, 2);
+  assert.deepEqual(h.calls.exec[1][2], { cwd: ROOT, on: "wsl" });
+  assert.deepEqual(h.calls.cancel.sort(), [`${HOME}/data`, `${HOME}/state`]);
+  assert.equal(h.calls.watch.length, 2, "no new watch");
 });
 
 test("hostile task text is rendered as plain strings", async () => {

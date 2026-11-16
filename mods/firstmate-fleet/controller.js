@@ -220,7 +220,8 @@ export function createController({ host, clock, parse = parseConfig, decode = de
             fail("timeout", "The collector did not finish within Herdr's time limit.", why);
             diag.category = "timeout";
           } else {
-            fail("spawn", `Could not run the collector: ${sanitize(why)}`);
+            const where = config.machine ? ` on machine "${config.machine}"` : "";
+            fail("spawn", `Could not run the collector${where}: ${sanitize(why)}`);
             diag.category = "spawn";
           }
           return;

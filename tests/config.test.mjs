@@ -13,8 +13,9 @@ test("a minimal valid config gets the documented defaults", () => {
     fallbackMs: 120000,
     staleAfterMs: 360000,
     forgeReads: false,
+    machine: null,
   });
-  assert.deepEqual(DEFAULTS, { minIntervalMs: 30000, fallbackMs: 120000, staleAfterMs: 360000, forgeReads: false });
+  assert.deepEqual(DEFAULTS, { minIntervalMs: 30000, fallbackMs: 120000, staleAfterMs: 360000, forgeReads: false, machine: null });
   assert.equal(PAGE_SIZE, 50);
 });
 
@@ -66,6 +67,26 @@ test("forgeReads must be boolean", () => {
   assert.equal(parseConfig(configText({ forgeReads: true })).config.forgeReads, true);
 });
 
+test("machine names a Herdr machine by herdr-core's name rule; null or absent means this computer", () => {
+  assert.equal(parseConfig(configText({ machine: null })).config.machine, null);
+  for (const good of ["wsl", "ubuntu-24.04", "box_1", "9lives", "a".repeat(32)]) {
+    assert.equal(parseConfig(configText({ machine: good })).config.machine, good, good);
+  }
+  for (const bad of ["", "WSL", "-wsl", ".wsl", "a b", "vps/t7", "a".repeat(33), "t7", "t12", 7, true]) {
+    const r = parseConfig(configText({ machine: bad }));
+    assert.equal(r.code, "invalid-machine", JSON.stringify(bad));
+  }
+  assert.equal(parseConfig(configText({ machine: "t" })).ok, true, "a lone t is not id-shaped");
+});
+
+test("a changed machine is a changed config", async () => {
+  const { sameConfig } = await import("../mods/firstmate-fleet/config.js");
+  const a = parseConfig(configText()).config;
+  const b = parseConfig(configText({ machine: "wsl" })).config;
+  assert.equal(sameConfig(a, b), false);
+  assert.equal(sameConfig(b, parseConfig(configText({ machine: "wsl" })).config), true);
+});
+
 test("unknown keys are rejected so a typo cannot silently fall back to a default", () => {
   const r = parseConfig(configText({ forgeRead: true }));
   assert.equal(r.code, "unknown-key");
@@ -79,7 +100,7 @@ test("the shipped config.example.json is a valid config with the documented defa
   const r = parseConfig(text);
   assert.equal(r.ok, true);
   assert.deepEqual(
-    { minIntervalMs: r.config.minIntervalMs, fallbackMs: r.config.fallbackMs, staleAfterMs: r.config.staleAfterMs, forgeReads: r.config.forgeReads },
+    { minIntervalMs: r.config.minIntervalMs, fallbackMs: r.config.fallbackMs, staleAfterMs: r.config.staleAfterMs, forgeReads: r.config.forgeReads, machine: r.config.machine },
     DEFAULTS,
   );
 });

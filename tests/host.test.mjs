@@ -60,6 +60,15 @@ test("P11: shell-looking paths stay inside single argv elements", () => {
   assert.ok(args.includes(`FM_HOME=${home}`));
 });
 
+test("with a machine, the same argv runs there through exec's `on`; without one, no `on` is passed", () => {
+  const local = collectorArgv(cfg());
+  const remote = collectorArgv(cfg({ machine: "wsl" }));
+  assert.equal(remote.command, local.command);
+  assert.deepEqual(remote.args, local.args);
+  assert.deepEqual(remote.options, { cwd: ROOT, on: "wsl" });
+  assert.equal("on" in local.options, false);
+});
+
 test("createHost passes the exact argv to exec and reads the hidden config file", async () => {
   const seen = [];
   const host = createHost(
@@ -78,7 +87,9 @@ test("createHost passes the exact argv to exec and reads the hidden config file"
   assert.deepEqual(await host.collect(cfg()), { code: 0, stdout: "{}", stderr: "" });
   assert.deepEqual(seen[0], collectorArgv(cfg()));
   assert.equal(await host.readConfig(), "text");
-  assert.deepEqual(seen[1], { path: "/cfg/.config.json" });
+  assert.deepEqual(seen[1], { path: "/cfg/.config.json" }, "the config is always read on this computer");
+  await host.collect(cfg({ machine: "wsl" }));
+  assert.deepEqual(seen[2].options, { cwd: ROOT, on: "wsl" });
 });
 
 test("the config path is the mod folder's hidden .config.json", () => {

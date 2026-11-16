@@ -6,7 +6,7 @@ A Herdr app mod that shows FirstMate's Bearings picture (Captain's Call, Underwa
 
 ## Requirements
 
-- Herdr app 0.1.10 with herdr-core 0.1.15, app 0.1.11 with core 0.1.16, app 0.1.12 with core 0.1.17, or app 0.1.16 with core 0.1.21, on the same Linux host as FirstMate. All four pairs are qualification targets; prefer the newest pair that passes, since later releases fix mod-related window freezes, terminal freezes on core–holder disconnects and during saves, and 25-second prompt reads.
+- Herdr app 0.1.10 with herdr-core 0.1.15, app 0.1.11 with core 0.1.16, app 0.1.12 with core 0.1.17, or app 0.1.16 with core 0.1.21, on the same Linux host as FirstMate, or a Windows app with FirstMate in WSL through the `machine` setting (untested; see [below](#windows-app-with-firstmate-in-wsl)). All four pairs are qualification targets; prefer the newest pair that passes, since later releases fix mod-related window freezes, terminal freezes on core–holder disconnects and during saves, and 25-second prompt reads.
 - A FirstMate checkout that ships `bin/fm-bearings-snapshot.sh` with `--json` and `--fields` (upstream `355a307` or later), plus `env`, Bash and jq.
 
 ## Install
@@ -24,8 +24,6 @@ On app 0.1.16 and later the check should not start a collection (the panel retur
 
 The check writes `gpui-kit.d.ts` and `jsconfig.json` (editor type files) into the folder it checks. Both are git-ignored if you check `mods/firstmate-fleet` in this repo.
 
-The Windows app loads the mod, but the panel cannot collect there: the collector runs through `env` and Bash, and settings take absolute POSIX paths.
-
 The first time Herdr sees the folder it docks the panel on the right at 420 px; after that your layout owns where it sits. The settings file is hidden (`.config.json`) so saving it does not hot-reload the mod and reinstalling does not overwrite it. The panel re-reads it before each collection.
 
 | Setting | Default | Meaning |
@@ -36,6 +34,39 @@ The first time Herdr sees the folder it docks the panel on the right at 420 px; 
 | `fallbackMs` | 120000 | Collect at least this often when nothing changes |
 | `staleAfterMs` | 360000 | Mark the snapshot stale after this long; at least 3 × `fallbackMs` |
 | `forgeReads` | false | Let FirstMate check GitHub for PR state of passed runs |
+| `machine` | null | Herdr machine (`hc machine ls`) that runs the collector; null runs it on this computer. The two paths are paths on that machine |
+
+### Windows app with FirstMate in WSL
+
+The panel can't run the collector on Windows itself: it needs `env`, Bash and jq. It can run it in WSL, with WSL added to Herdr as a machine. This needs herdr-core 0.1.20 or later on Windows (`hc --version`) and has not been tested end to end yet (P29 in the spec).
+
+1. In PowerShell 7 (`pwsh`; Windows PowerShell 5.1 mangles the quotes), add your distro as a machine. `wsl -l -q` lists distro names.
+
+   ```powershell
+   hc machine add --via 'wsl.exe -d Ubuntu -e sh -c' --name wsl
+   ```
+
+   If WSL has no herdr-core or an old one, `hc` offers to copy it there.
+2. Check that the collector's tools are on the path there. This should print three paths:
+
+   ```powershell
+   hc exec --on wsl sh -c 'command -v env bash jq'
+   ```
+
+   This runs with the same environment the collector gets, which isn't your login shell's. Tools that only `~/.bashrc` or `~/.profile` put on the path won't be found; the same goes for anything FirstMate's backends call, such as `tmux` or `hc`.
+
+3. In `%USERPROFILE%\.config\herdr-app\mods\firstmate-fleet\.config.json`, use WSL paths and name the machine:
+
+   ```json
+   {
+     "schema": "firstmate-herdr-panel.config.v2",
+     "firstmateRoot": "/home/you/firstmate",
+     "firstmateHome": "/home/you/firstmate",
+     "machine": "wsl"
+   }
+   ```
+
+Herdr can only watch folders on the computer it runs on, so the panel doesn't refresh when files change in WSL. It collects every `fallbackMs` (2 minutes by default) and when you press Refresh. Hover over the home name in the header to see this. For faster updates, lower `fallbackMs` as far as `minIntervalMs` (at least 10 seconds), keeping `staleAfterMs` at 3 × `fallbackMs` or more. Each collection still has to finish within Herdr's 30-second limit, including starting WSL if the distro is stopped.
 
 ## What it runs, and what that touches
 
@@ -46,7 +77,7 @@ env -u FM_ROOT_OVERRIDE -u FM_STATE_OVERRIDE … FM_HOME=<home> [FM_CREW_STATE_N
   bash <root>/bin/fm-bearings-snapshot.sh --json --fields paths,endpoints
 ```
 
-It runs once at start, after changes under `<home>/data` and `<home>/state` (2 s debounce, no sooner than `minIntervalMs`), every `fallbackMs` otherwise, and when you press Refresh. Hidden panels keep collecting.
+It runs once at start, after changes under `<home>/data` and `<home>/state` (2 s debounce, no sooner than `minIntervalMs`), every `fallbackMs` otherwise, and when you press Refresh. Hidden panels keep collecting. With `machine` set, the same command runs on that machine and there are no change-driven runs.
 
 The mod itself makes no network calls. **FirstMate's collector does:**
 

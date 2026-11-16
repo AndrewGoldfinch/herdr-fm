@@ -26,7 +26,10 @@ export function collectorArgv(config) {
   args.push(`FM_HOME=${config.firstmateHome}`);
   if (!config.forgeReads) args.push("FM_CREW_STATE_NO_FORGE=1");
   args.push("bash", `${config.firstmateRoot}/${COLLECTOR}`, "--json", "--fields", "paths,endpoints");
-  return { command: "env", args, options: { cwd: config.firstmateRoot } };
+  const options = { cwd: config.firstmateRoot };
+  // Another Herdr machine runs the same argv through herdr-core, with no shell in between.
+  if (config.machine) options.on = config.machine;
+  return { command: "env", args, options };
 }
 
 /** The literal "mods/firstmate-fleet/" lets `mod.clone` rewrite the path for a clone. */

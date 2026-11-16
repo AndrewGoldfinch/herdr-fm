@@ -18,6 +18,7 @@
 | `herdr-app check` side effects (P28) | `checking()` guard added for app 0.1.16; the app's docs say `checking()` is true throughout a check | — | not shown: the 0.1.16 check ran without `.config.json`, so nothing would have started either way |
 | Namespace import of `herdr` | documented for `fs/promises` in the mod guide | — | loads on 0.1.16; confirm on 0.1.10 |
 | Files written by `herdr-app check` | — | — | `gpui-kit.d.ts` and `jsconfig.json` in the checked folder (0.1.16); git-ignored |
+| Collector on another Herdr machine (`machine`, P29) | `exec` `on` documented on 0.1.10–0.1.16; argv without a shell; watches local only; WSL as a machine from core 0.1.20 (below) | — | pending (Windows app, FirstMate in WSL) |
 | Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on every pair |
 | App termination, core saves, read side effects, watch semantics (P24–P27) | 0.1.12 and 0.1.17 fixes read (below) | — | pending on every pair |
 | Watch paths from a symlinked home | canonicalization found in `src/files.rs` on app 0.1.10, 0.1.11, 0.1.12 and 0.1.16; fixed in the controller with tests | — | pending (P27) |
@@ -130,6 +131,19 @@ It proves names and argument presence, not argument types, which element a metho
 - **Override scrub list:** unchanged (re-derived with the command above).
 - **hc backend:** auto-selects hc when FirstMate runs in an app-projected terminal (#8060); submits with `hc send --wait` behind an `hc` ≥ 0.1.14 gate (#8037).
 - **OSC 7501 bridge** (#8011) is merged and on by default, so Herdr's Agents list now shows FirstMate-derived status for hc workers whose harness does not report its own.
+
+## Herdr machines (source, November 16)
+
+For the `machine` setting. Read at app `034f8b8` (`defaults/herdr.d.ts`, `defaults/AGENTS.md`), the app 0.1.10, 0.1.11 and 0.1.12 `herdr.d.ts`, and core `1b0393f` (0.1.21).
+
+- **`exec(command, args, { cwd, on })`** is in `herdr.d.ts` on all four app versions: "on that machine (a space's `machine`) through herdr-core, its home by default. Rejects when it can't start (not installed, no such folder, the machine is unreachable)."
+- **No shell.** Core's `ExecParams.argv` is "Program and arguments, run as given (no shell)". The panel's argv reaches `env` on that machine unchanged, so P11 holds there.
+- **Environment and folder.** `exec::run` clears the environment and sets `platform::program_env()`: the core's own environment, on Linux without systemd service variables and with the systemd user session's variables when there is one. It is not a login shell's, so PATH additions in `~/.bashrc` or `~/.profile` are missing; `env -u` still scrubs overrides. A relative `cwd` starts from that machine's home; the panel passes an absolute one. Everything the command started is ended when it returns.
+- **Limits.** The app's `exec` timeout (30 s default) covers the remote call. Core's own default for `hc exec` is 60 s.
+- **`watchFolder`** is "here only; poll a remote space's folder". The panel starts no watches when `machine` is set.
+- **`readTextFile`** takes `on` too, but the panel's `.config.json` lives in the app's mod folder, so it is always read here.
+- **WSL as a machine.** Core 0.1.20 (#128): "On Windows, `hc machine add --via` works: it takes a program and its arguments, so WSL can be a machine with `hc machine add --via 'wsl.exe -d Ubuntu -e sh -c' --name wsl`." `docs/machines.md` says to type the quoted `--via` in PowerShell 7, and that `add` offers to copy hc to a machine where it is missing or too old.
+- **Names.** `addr::check_name`: 1–32 of `a-z 0-9 - _ .`, starting with a letter or digit, not shaped like a terminal id. `parseConfig` applies the same rule.
 
 ## Native APIs to verify on the host
 

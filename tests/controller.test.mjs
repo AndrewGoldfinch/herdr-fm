@@ -379,6 +379,17 @@ test("oversized output and exec rejection are failures", async () => {
   assert.match(env.c.getState().error.message, /no such folder/);
 });
 
+test("a failed start on another machine names the machine", async () => {
+  const env = setup({ config: { machine: "wsl" } });
+  const a = await started(env);
+  env.host.pending.shift().reject(new Error("machine wsl is unreachable"));
+  await a.pending;
+  await flush();
+  const e = env.c.getState().error;
+  assert.equal(e.category, "spawn");
+  assert.match(e.message, /^Could not run the collector on machine "wsl": /);
+});
+
 test("an exec timeout is named as a timeout, not a failure to start", async () => {
   // App 0.1.14 documents that exec rejects on timeout (default 30 s).
   const env = setup();

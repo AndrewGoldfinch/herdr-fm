@@ -171,6 +171,15 @@ test("cursor clamps to the page and search reports no matches plainly", () => {
 
 test("header carries home, age and refresh state", () => {
   const v = buildView(state({ refreshing: true }), UI);
-  assert.deepEqual(v.header, { home: "captain/firstmate", homeCheck: "paths", homeNote: null, age: "10s", refreshing: true, stale: false, prs: "not requested (pass --include-prs for live GitHub discovery)" });
+  assert.deepEqual(v.header, { home: "captain/firstmate", homeCheck: "paths", homeNote: null, machine: null, machineNote: null, age: "10s", refreshing: true, stale: false, prs: "not requested (pass --include-prs for live GitHub discovery)" });
   assert.equal(v.notRequested, 4);
+});
+
+test("a home on another machine is named in the header, with how it refreshes", () => {
+  const v = buildView(state({ config: { firstmateHome: HOME, staleAfterMs: 360000, fallbackMs: 120000, machine: "wsl" } }), UI);
+  assert.equal(v.header.machine, "wsl");
+  assert.equal(v.header.machineNote, 'Collected on Herdr machine "wsl". Herdr cannot watch folders there, so the panel refreshes every 2 min, and when you press Refresh.');
+  const odd = buildView(state({ config: { firstmateHome: HOME, staleAfterMs: 360000, fallbackMs: 45000, machine: "wsl" } }), UI);
+  assert.match(odd.header.machineNote, /every 45 s,/);
+  assert.equal(buildView(state({ model: null, loading: true, config: { firstmateHome: HOME, staleAfterMs: 360000, fallbackMs: 120000, machine: "wsl" } }), UI).header.machine, "wsl", "named before the first collection lands");
 });

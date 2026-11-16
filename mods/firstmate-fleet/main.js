@@ -76,8 +76,10 @@ export default class FirstmateFleet extends View {
   }
 
   // One watchFolder loop per folder of the configured home; loops end when the home changes.
+  // watchFolder works on this computer only: a home on another machine relies on the fallback timer.
   ensureWatches(cx) {
-    const home = this.controller.getState().config?.firstmateHome ?? null;
+    const config = this.controller.getState().config;
+    const home = config && !config.machine ? config.firstmateHome : null;
     if (home !== this.watchHome) {
       this.watchHome = home;
       this.watching = new Set();
@@ -183,7 +185,16 @@ export default class FirstmateFleet extends View {
       .border_b(1)
       .border_color(t.border)
       .child(div().flex_none().font_semibold().child("FirstMate fleet"))
-      .child(div().flex_1().min_w(0).truncate().text_color(t.dim).child(h.homeNote ? `${h.home ?? ""} · ${h.homeNote}` : h.home ?? ""))
+      .child(
+        div()
+          .id("home-label")
+          .flex_1()
+          .min_w(0)
+          .truncate()
+          .text_color(t.dim)
+          .when(Boolean(h.machineNote), (el) => el.tooltip(h.machineNote))
+          .child([h.home, h.machine ? `on ${h.machine}` : null, h.homeNote].filter(Boolean).join(" · ")),
+      )
       .child(div().flex_none().text_size(11).text_color(h.stale ? t.done : t.dim).child(h.refreshing ? "Refreshing…" : h.age ? `${h.age} ago` : ""))
       .child(
         div()

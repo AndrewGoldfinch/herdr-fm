@@ -29,6 +29,8 @@ No live validation has been performed for this revision.
 
 **Revision 3.1 — October 31, 2026:** Tracks FirstMate PR #8011 (worker-side OSC 7501 reporting) as a possible integration enhancement, and adds model-pin readback (I11) and state-preservation regressions (I12) to the hc qualification matrix. The observational snapshot design is unchanged; see “Tracked upstream proposals”.
 
+**Revision 3.5 — November 16, 2026:** Adds an optional `machine` setting so a Windows Herdr app can show a FirstMate home in WSL. The same collector argv runs on that Herdr machine through `exec`'s `on`; the panel watches no folders there and refreshes on its fallback timer and on Refresh. P29 covers it. A `herdr-app check` on the Windows build of app 0.1.16 passed with no `.config.json`; P28 remains open.
+
 **Revision 3.4 — November 16, 2026:** Reviews Herdr app 0.1.13–0.1.16 and core 0.1.18–0.1.21 and adds app 0.1.16 / core 0.1.21 as a fourth pair. The panel now skips work during `herdr-app check`, cancels and reloads folder watches, and names `exec` timeouts. FirstMate `main` (`427056c`) adds `decisions_open[].question`, which decision details show; #8011 is merged and on by default. P23 grows to 500 reloads; P28 covers `herdr-app check`.
 
 **Revision 3.3 — November 2, 2026:** Adds app 0.1.12 with core 0.1.17 as a third qualification pair, with P24–P27 for app termination, core saves under load, observation side effects and watch semantics, and hc rows I15–I19. States explicitly that worker survival is not conversation recovery or exactly-once external action. The static API check covers all three app revisions.
@@ -167,11 +169,12 @@ Use `mods/firstmate-fleet/.config.json`, loaded through `readTextFile`. Herdr ho
   "minIntervalMs": 30000,
   "fallbackMs": 120000,
   "staleAfterMs": 360000,
-  "forgeReads": false
+  "forgeReads": false,
+  "machine": null
 }
 ```
 
-The paths are examples and must be configured. Require absolute nonempty paths and reject NUL bytes. Accept `minIntervalMs` from 10,000 to 300,000 and `fallbackMs` from `minIntervalMs` to 600,000; require `staleAfterMs >= 3 * fallbackMs`. Page size is fixed at 50 in the prototype. Invalid configuration renders setup instructions and launches no command. The controller re-reads the file before each collection; a changed configuration starts a new epoch and clears the prior model before sampling the new home.
+The paths are examples and must be configured. They are paths on the machine that runs the collector. Require absolute nonempty paths and reject NUL bytes. `machine` is null (this computer) or a Herdr machine name from `hc machine ls`, checked against herdr-core's name rule: 1–32 of `a-z 0-9 - _ .`, starting with a letter or digit, not shaped like a terminal id. Accept `minIntervalMs` from 10,000 to 300,000 and `fallbackMs` from `minIntervalMs` to 600,000; require `staleAfterMs >= 3 * fallbackMs`. Page size is fixed at 50 in the prototype. Invalid configuration renders setup instructions and launches no command. The controller re-reads the file before each collection; a changed configuration starts a new epoch and clears the prior model before sampling the new home.
 
 ### Invocation
 
@@ -196,7 +199,9 @@ The list comes from the variables the reviewed collectors read. Phase 0 re-deriv
 
 Bearings publishes only a two-segment `home` label, not the full path, so section 5 adds a path check.
 
-Initial qualification target: Herdr app and FirstMate on the same Linux desktop host. WSLg is a separate qualification target; a Windows app talking to FirstMate in WSL is not claimed supported by this local invocation. A later remote mode can use `exec(..., {on: machine})` after path/environment qualification. That mode must budget for remote readiness delays (core 0.1.17 #63 fixed templates taking over 30 seconds), because a remote collection still has Herdr's 30-second `exec` limit.
+Initial qualification target: Herdr app and FirstMate on the same Linux desktop host. WSLg is a separate qualification target.
+
+**Another machine (`machine`).** With `machine` set, the panel passes `{ cwd, on: machine }` and nothing else changes: the same argv, scrub list and home checks. Herdr documents `on` for `exec` on every target app version. herdr-core runs the argv there without a shell (`ExecParams`: "run as given (no shell)"), with the environment of the core on that machine (on Linux, plus the systemd user session's variables when there is one), not a login shell's, starting from its home unless `cwd` is absolute, and ends everything the command started when it returns. `env`, Bash, jq and the tools FirstMate's backends call must be on that path. The intended use is a Windows app with FirstMate in WSL, which core 0.1.20 and later can add as a machine with `hc machine add --via 'wsl.exe -d <distro> -e sh -c' --name wsl` (#128). `.config.json` is still read on this computer. `watchFolder` works only on this computer, so the panel starts no watches and relies on `fallbackMs` and Refresh. A remote collection still has Herdr's 30-second `exec` limit, which now includes reaching the machine; for WSL that can include starting the distro. P29 measures both.
 
 ### What one collection does
 
@@ -430,6 +435,7 @@ Live integration uses harmless shell workers and isolated state. Record changes 
 | P26 | Observation side effects: a full-screen agent waiting at a prompt, read by 20 collections | Per pair: per-read latency, and whether the agent's screen and scroll position changed (`herdr-app shot` before and after). Any change is recorded against the collector's observational claim on that pair |
 | P27 | Watch semantics: home as the FirstMate checkout (git-ignoring `state/` and `data/`), home outside any repository, home through a symlink, and a `state/` tree over 4,096 directories | Changes to `state/<id>.status`, `state/<id>.meta`, `state/.afk` and `data/backlog.md` start a collection within the debounce and minimum interval; otherwise the fallback cadence is observed and recorded. On app 0.1.16, a reclaimed watch (an empty batch) starts one reload and the watch restarts; close leaves no watch behind |
 | P28 | `herdr-app check` with a valid `.config.json` | On app 0.1.16 and later: no collector process, no watch, no timer, and the check passes. On earlier apps: one collector run is recorded as a known side effect |
+| P29 | Collector on another Herdr machine: Windows app 0.1.16 with core 0.1.20 or later, FirstMate in WSL added as machine `wsl`, `.config.json` with WSL paths and `"machine": "wsl"` | Rows match a `/bearings` run inside WSL; the header shows `on wsl`; no `watchFolder` call; collections only at `fallbackMs` and on Refresh; first-collection latency recorded with the distro stopped (`wsl --terminate <distro>`) and running; with the machine unreachable or removed, a failure naming the machine and the last model kept as historical, never an empty fleet; producer clock skew after host sleep shows as uncertain (P13) |
 
 For P20–P28, measure from outside the app so a stalled window cannot hide its own stall. For example, time a `herdr-app status` reply once a second and sample the app's CPU and resident memory with `ps`; Task 0 confirms the window's main thread serves that reply. Run them on every target pair with the same home, fixture and settings. Older pairs' results are the baseline later fixes are measured against, not failures to be waived.
 
@@ -453,7 +459,7 @@ Measure collection latency (P17) separately from panel overhead. The collector w
 
 Panel acceptance requires all of the following:
 
-- P01–P28 pass with recorded evidence on each target pair claimed; critical state/identity tests cannot be waived by usability gains. P20–P28 are also run on the pairs not claimed, so a failure there is recorded against its version rather than hidden.
+- P01–P28 pass with recorded evidence on each target pair claimed, and P29 too if a Windows app with a WSL home is claimed; critical state/identity tests cannot be waived by usability gains. P20–P28 are also run on the pairs not claimed, so a failure there is recorded against its version rather than hidden.
 - `node --test tests/*.test.mjs` passes in the proposed companion repo.
 - `herdr-app check <installed-mod-path>` exits zero on the qualified host; this render-once check supplements live asynchronous testing.
 - A 30-minute live session on each claimed pair demonstrates failure/recovery, away mode, manual refresh, change-driven refresh, close and hot reload without task mutation or duplicate loops, with collections per hour recorded.
@@ -562,6 +568,7 @@ Proposed repository files and responsibilities:
 - [ ] Add view-model assertions for section counts, captain-hold labelling, missing evidence banners, the away banner, artifact text and the identity caveat.
 - [ ] Implement the `View` lifecycle with `cx.spawn`, `cx.timer.every`, two `watchFolder` loops and callback-local contexts. Never retain `cx` for later callbacks. Implement `async close(cx)` as dispose only. Wire refresh, search, pagination and details without worker actions.
 - [ ] Run `node --test tests/*.test.mjs` and `herdr-app check <installed-mod-path>`; require both to pass.
+- [ ] If the Windows app is in scope, run P29 with FirstMate in WSL.
 - [ ] Execute P12 live: hide, show, close and hot reload during collection. Confirm an old instance never publishes or schedules another request and no workers terminate. Record permitted old-subprocess overlap and confirm each command reaches completion or the host limit.
 - [ ] Inspect native layout at narrow/wide panel sizes and with keyboard navigation, long titles and error messages. Commit the mod with verification evidence.
 

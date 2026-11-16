@@ -2,9 +2,14 @@
 
 export const CONFIG_SCHEMA = "firstmate-herdr-panel.config.v2";
 export const PAGE_SIZE = 50;
-export const DEFAULTS = Object.freeze({ minIntervalMs: 30000, fallbackMs: 120000, staleAfterMs: 360000, forgeReads: false });
+export const DEFAULTS = Object.freeze({ minIntervalMs: 30000, fallbackMs: 120000, staleAfterMs: 360000, forgeReads: false, machine: null });
 
-const KEYS = new Set(["schema", "firstmateRoot", "firstmateHome", "minIntervalMs", "fallbackMs", "staleAfterMs", "forgeReads"]);
+const KEYS = new Set(["schema", "firstmateRoot", "firstmateHome", "minIntervalMs", "fallbackMs", "staleAfterMs", "forgeReads", "machine"]);
+
+// herdr-core's machine name rule (`addr::check_name`): 1-32 of a-z 0-9 - _ . starting with a
+// letter or digit, and not shaped like a terminal id (t7).
+const MACHINE_NAME = /^[a-z0-9][a-z0-9._-]{0,31}$/;
+const TERMINAL_ID = /^t[1-9][0-9bcdfghjkmnpqrstvwxyz]*$/;
 
 const fail = (code, message) => ({ ok: false, code, message });
 
@@ -19,7 +24,7 @@ const isWholeMs = (v) => Number.isInteger(v) && v > 0;
 
 /**
  * @typedef {{firstmateRoot: string, firstmateHome: string, minIntervalMs: number,
- *   fallbackMs: number, staleAfterMs: number, forgeReads: boolean}} PanelConfig
+ *   fallbackMs: number, staleAfterMs: number, forgeReads: boolean, machine: string | null}} PanelConfig
  * @typedef {{ok: true, config: PanelConfig} | {ok: false, code: string, message: string}} ConfigResult
  * @param {string | null | undefined} text
  * @returns {ConfigResult}
@@ -56,8 +61,13 @@ export function parseConfig(text) {
   }
   const forgeReads = raw.forgeReads ?? DEFAULTS.forgeReads;
   if (typeof forgeReads !== "boolean") return fail("invalid-option", '"forgeReads" must be true or false.');
+  // A Herdr machine (`hc machine ls`) the collector runs on; null runs it on this computer.
+  const machine = raw.machine ?? DEFAULTS.machine;
+  if (machine !== null && (typeof machine !== "string" || !MACHINE_NAME.test(machine) || TERMINAL_ID.test(machine))) {
+    return fail("invalid-machine", '"machine" must be null or a Herdr machine name from `hc machine ls`.');
+  }
 
-  return { ok: true, config: { firstmateRoot, firstmateHome, minIntervalMs, fallbackMs, staleAfterMs, forgeReads } };
+  return { ok: true, config: { firstmateRoot, firstmateHome, minIntervalMs, fallbackMs, staleAfterMs, forgeReads, machine } };
 }
 
 /** @param {PanelConfig | null} a @param {PanelConfig | null} b */

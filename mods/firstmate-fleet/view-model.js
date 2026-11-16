@@ -149,6 +149,13 @@ function secondmateRows(st) {
   }));
 }
 
+// Herdr's watchFolder works on this computer only, so a home on another machine is polled.
+function machineNote(config) {
+  const ms = config.fallbackMs;
+  const every = ms % 60000 === 0 ? `${ms / 60000} min` : `${Math.round(ms / 1000)} s`;
+  return `Collected on Herdr machine "${config.machine}". Herdr cannot watch folders there, so the panel refreshes every ${every}, and when you press Refresh.`;
+}
+
 /**
  * @param {ReturnType<import("./controller.js").createController>["getState"] extends () => infer S ? S : never} st
  * @param {{section: string, query: string, page: number, selectedKey: string | null, cursor: number}} ui
@@ -166,6 +173,8 @@ export function buildView(st, ui) {
       homeCheck: model ? model.homeCheck : null,
       // Quiet by default: label-only verification is a header note, not a banner.
       homeNote: model && model.homeCheck === "label-only" ? "label only" : null,
+      machine: st.config?.machine ?? null,
+      machineNote: st.config?.machine ? machineNote(st.config) : null,
       age: model ? formatAge(st.receiptAgeMs) : null,
       refreshing: st.refreshing,
       stale: st.stale,
