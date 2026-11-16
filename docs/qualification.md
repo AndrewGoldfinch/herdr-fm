@@ -18,11 +18,11 @@
 | `herdr-app check` side effects (P28) | `checking()` guard added for app 0.1.16; the app's docs say `checking()` is true throughout a check | — | not shown: the 0.1.16 check ran without `.config.json`, so nothing would have started either way |
 | Namespace import of `herdr` | documented for `fs/promises` in the mod guide | — | loads on 0.1.16; confirm on 0.1.10 |
 | Files written by `herdr-app check` | — | — | `gpui-kit.d.ts` and `jsconfig.json` in the checked folder (0.1.16); git-ignored |
-| Collector on another Herdr machine (`machine`, P29) | `exec` `on` documented on 0.1.10–0.1.16; argv without a shell; watches local only; WSL as a machine from core 0.1.20 (below) | — | pending (Windows app, FirstMate in WSL) |
+| Collector on another Herdr machine (`machine`, P29) | `exec` `on` documented on 0.1.10–0.1.16; argv without a shell; watches local only; WSL as a machine from core 0.1.20 (below) | — | first run passed on Windows app 0.1.16, core 0.1.21 (below); latency, stopped distro and unreachable machine pending |
 | Polling, slow snapshots, disconnects, hot reloads (P20–P23) | 0.1.11 and 0.1.16 fixes read (below) | — | pending on every pair |
 | App termination, core saves, read side effects, watch semantics (P24–P27) | 0.1.12 and 0.1.17 fixes read (below) | — | pending on every pair |
 | Watch paths from a symlinked home | canonicalization found in `src/files.rs` on app 0.1.10, 0.1.11, 0.1.12 and 0.1.16; fixed in the controller with tests | — | pending (P27) |
-| First-dock and uninstall behaviour | `mod.json` docking rule read | — | pending |
+| First-dock and uninstall behaviour | `mod.json` docking rule read; a new mod is not docked into a shipped layout (`sync_folders` in `src/window.rs`, app 0.1.10 source) | — | Windows 0.1.16 on a shipped layout: not docked, as the source says; docking on a duplicated layout and uninstall pending |
 | Fork contains `355a307` | not checked | — | pending |
 
 ## Pins
@@ -195,6 +195,13 @@ It does not show:
 - Anything about apps 0.1.10–0.1.12 or a Linux host.
 
 A Windows app cannot run P28 or any live scenario: `parseConfig` accepts only absolute POSIX paths, and the collector runs through `env` and Bash.
+
+### P29 first run: Windows app 0.1.16, core 0.1.21, FirstMate in WSL (November 16)
+
+- **Setup:** `hc machine add --via 'wsl.exe -d <distro> -e sh -c' --name wsl`. With the collector's environment, `env`, `bash` and `jq` all resolve to `/usr/bin` in WSL. `.config.json` named the WSL checkout as both root and home, with `"machine": "wsl"`.
+- **Opening:** the window used a shipped layout, so Herdr had not docked the mod. That matches `sync_folders`, which skips shipped layouts. `herdr-app do mod.open '{"name":"firstmate-fleet"}'` opened it as a floating window. The `Ctrl+Shift+K` key opens Herdr's tab picker, not a mod list.
+- **Result:** the collector ran in WSL and decoded. The header read `<user>/firstmate · on wsl` with the age, and the tabs read Captain's Call 0, Underway 1, Recently Landed 5, Charted Next 15, Secondmates 0 and Endpoint warnings 1. One limited-data banner showed Bearings' `omitted[]` entry for captain holds bucketed blocked, dated or aged (2, reveal `--all-decisions`).
+- **Not yet recorded:** first-load time with the distro running and stopped, the unreachable-machine failure, rows checked against a `/bearings` run in WSL, and the panel docked in a layout.
 
 ### P28 procedure (Linux host)
 

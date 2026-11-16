@@ -24,7 +24,7 @@ On app 0.1.16 and later the check should not start a collection (the panel retur
 
 The check writes `gpui-kit.d.ts` and `jsconfig.json` (editor type files) into the folder it checks. Both are git-ignored if you check `mods/firstmate-fleet` in this repo.
 
-The first time Herdr sees the folder it docks the panel on the right at 420 px; after that your layout owns where it sits. The settings file is hidden (`.config.json`) so saving it does not hot-reload the mod and reinstalling does not overwrite it. The panel re-reads it before each collection.
+Herdr docks a new mod only into a layout you own, never into a shipped one. If you use a shipped layout, duplicate it first (Ctrl+Shift+P, then "Duplicate layout"; it switches to the copy), then restart Herdr. The first time Herdr sees the folder on your own layout, it docks the panel on the right at 420 px; after that your layout owns where it sits. To look at the panel without docking it, `herdr-app do mod.open '{"name":"firstmate-fleet"}'` opens it as a floating window; run it again to close it. The settings file is hidden (`.config.json`) so saving it does not hot-reload the mod and reinstalling does not overwrite it. The panel re-reads it before each collection.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
