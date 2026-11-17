@@ -143,14 +143,19 @@ test("refresh while busy does not start a second collection", async () => {
   const h = harness({ result: () => new Promise((r) => (release = r)) });
   await settled(h);
   const root = h.panel.render();
-  assert.match(text(root).join("\n"), /Refreshing…/);
+  const spinning = (r) => {
+    let hit = false;
+    walk(find(r, "refresh"), (n) => (hit ||= n._kind === "svg"));
+    return hit;
+  };
+  assert.ok(spinning(root), "the refresh control shows Herdr's spinner");
   find(root, "refresh")._handlers.on_click({}, h.cx);
   find(root, "refresh")._handlers.on_click({}, h.cx);
   await settled(h);
   assert.equal(h.calls.exec.length, 1);
   release({ code: 0, stdout: fixtureText("normal"), stderr: "" });
   await settled(h);
-  assert.doesNotMatch(text(h.panel.render()).join("\n"), /Refreshing…/);
+  assert.equal(spinning(h.panel.render()), false);
 });
 
 test("close disposes: later ticks start nothing", async () => {
